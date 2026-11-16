@@ -1,4 +1,3 @@
-
 # 5-Stage Pipelined RISC-V Processor (RV32I subset)
 
 Modern Computer Architecture — Project 3
@@ -47,6 +46,44 @@ flowchart LR
 | **WB – Write Back** | Writes the final result into the destination register. |
 
 Pipeline registers preserve instruction metadata between consecutive stages, allowing multiple instructions to execute in flight simultaneously.
+
+---
+
+## Supported RISC-V Instruction Set
+
+The processor implements a subset of the RV32I instruction set. The supported instructions cover arithmetic operations, immediate operations, memory access and conditional branching.
+
+| Instruction | Format | Operation | Description |
+|---|---|---|---|
+| `ADD rd, rs1, rs2` | R-Type | `rd = rs1 + rs2` | Adds two register values. |
+| `SUB rd, rs1, rs2` | R-Type | `rd = rs1 - rs2` | Subtracts the second register value from the first. |
+| `ADDI rd, rs1, imm` | I-Type | `rd = rs1 + imm` | Adds an immediate value to a register. |
+| `LW rd, offset(rs1)` | I-Type | `rd = MEM[rs1 + offset]` | Loads a word from data memory. |
+| `SW rs2, offset(rs1)` | S-Type | `MEM[rs1 + offset] = rs2` | Stores a register value into data memory. |
+| `BEQ rs1, rs2, label` | B-Type | Branch if `rs1 == rs2` | Branches when both register values are equal. |
+| `BNE rs1, rs2, label` | B-Type | Branch if `rs1 != rs2` | Branches when the register values are unequal. |
+| `NOP` | No operation | No architectural change | Performs no useful operation. |
+
+### Instruction Format Overview
+
+The implemented instructions use four standard RISC-V instruction formats:
+
+- **R-Type:** Used for register-to-register arithmetic operations such as ADD and SUB.
+- **I-Type:** Used for immediate arithmetic and load operations.
+- **S-Type:** Used for store operations that write register values to memory.
+- **B-Type:** Used for conditional branch instructions.
+
+### Register File
+
+The processor uses a 32-register architecture with 32-bit registers (`x0` to `x31`).
+
+- `x0` is hardwired to zero.
+- Registers `x1` to `x31` are used to store values.
+- The register file supports two read ports and one write port.
+
+This instruction subset provides the basic functionality required to demonstrate arithmetic execution, memory operations, register dependencies and control-flow handling in a pipelined processor.
+
+---
 
 ## Data Hazards and Pipeline Control
 
@@ -134,7 +171,7 @@ The script exits with a non-zero status if any check fails, making it a reliable
 
 ## Repository map
 
-```
+```text
 rtl/common/          shared modules
   defines.vh           opcodes, ALU codes, memory sizing
   alu.v                ADD / SUB
