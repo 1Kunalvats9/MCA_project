@@ -1,10 +1,9 @@
+
 # 5-Stage Pipelined RISC-V Processor (RV32I subset)
 
 Modern Computer Architecture — Project 3
 
-A five-stage pipelined RISC-V processor in Verilog, built in **four
-configurations** so the effect of pipelining, of operand forwarding and of
-dynamic branch prediction can each be measured rather than asserted:
+A five-stage pipelined RISC-V processor in Verilog, built in **four configurations** so the effect of pipelining, of operand forwarding and of dynamic branch prediction can each be measured rather than asserted:
 
 | Configuration | Parameters | Purpose |
 |---|---|---|
@@ -13,15 +12,64 @@ dynamic branch prediction can each be measured rather than asserted:
 | Pipelined, forwarding | `FORWARD_EN=1, PREDICTOR=0` | adds the bypass network |
 | Pipelined, fwd + predictor | `FORWARD_EN=1, PREDICTOR=1` | adds a 64-entry 2-bit branch history table |
 
-The three pipelined configurations are built from **identical RTL** and
-differ only by parameters, and each step adds exactly one feature, so
-every comparison isolates that feature:
+The three pipelined configurations are built from **identical RTL** and differ only by parameters, and each step adds exactly one feature, so every comparison isolates that feature:
 
 ```
 stall  --[+ forwarding]-->  fwd  --[+ 2-bit predictor]-->  pred
 ```
 
 **Instruction set:** `add` `sub` `addi` `lw` `sw` `beq` `bne` (plus `nop`).
+
+---
+
+## Pipeline Architecture
+
+The processor uses a classic five-stage pipeline. Each instruction passes through five stages, with pipeline registers carrying the required data and control signals between stages.
+
+```mermaid
+flowchart LR
+    IF["IF: Instruction Fetch"] --> IFID["IF/ID Register"]
+    IFID --> ID["ID: Instruction Decode"]
+    ID --> IDEX["ID/EX Register"]
+    IDEX --> EX["EX: Execute"]
+    EX --> EXMEM["EX/MEM Register"]
+    EXMEM --> MEM["MEM: Memory Access"]
+    MEM --> MEMWB["MEM/WB Register"]
+    MEMWB --> WB["WB: Write Back"]
+```
+
+| Stage | Description |
+|---|---|
+| **IF – Instruction Fetch** | Fetches the instruction using the program counter and selects the next PC. |
+| **ID – Instruction Decode** | Decodes the instruction, reads source registers and generates control signals. |
+| **EX – Execute** | Performs ALU operations, operand forwarding and branch resolution. |
+| **MEM – Memory Access** | Performs memory reads for LW and memory writes for SW. |
+| **WB – Write Back** | Writes the final result into the destination register. |
+
+Pipeline registers preserve instruction information between consecutive stages, allowing multiple instructions to execute simultaneously.
+
+## Data Hazards and Pipeline Control
+
+A data hazard occurs when an instruction requires a register value that an earlier instruction has not yet produced. This processor implements different mechanisms to handle data and control hazards.
+
+### Hazard Handling Techniques
+
+| Technique | How it works |
+|---|---|
+| **Pipeline Stalling** | Pauses instruction fetching and inserts a bubble when a required value is unavailable. |
+| **Operand Forwarding** | Sends results directly from later pipeline stages to the EX stage without waiting for register write-back. |
+| **Load-Use Detection** | Detects dependencies involving load instructions and inserts one bubble when forwarding is enabled. |
+| **Branch Prediction** | Uses a 64-entry Branch History Table with 2-bit saturating counters to predict branch outcomes. |
+| **Pipeline Flushing** | Removes incorrectly fetched instructions when branch prediction is incorrect. |
+
+### Configuration Comparison
+
+- **Single-cycle:** Used as the reference architecture.
+- **Stall-only:** Handles dependencies using pipeline stalls without operand forwarding.
+- **Forwarding:** Uses bypass paths to reduce unnecessary stalls.
+- **Forwarding + Branch Prediction:** Combines forwarding with dynamic branch prediction to reduce control-hazard penalties.
+
+These configurations help demonstrate how different hazard-handling techniques affect CPI, IPC and overall processor performance.
 
 ---
 
@@ -45,8 +93,7 @@ Run synthesis (area and logic depth):
 ./sim/synth.sh
 ```
 
-Run the FPGA characterisation — needs Vivado, so Windows or Linux
-(see [fpga/README.md](fpga/README.md)):
+Run the FPGA characterisation — needs Vivado, so Windows or Linux (see [fpga/README.md](fpga/README.md)):
 
 ```bash
 vivado -mode batch -source fpga/run_vivado.tcl
@@ -56,8 +103,7 @@ vivado -mode batch -source fpga/run_vivado.tcl
 python3 tools/fpga_table.py
 ```
 
-Run one program on one configuration, with a pipeline trace
-(`single` | `stall` | `fwd` | `pred`):
+Run one program on one configuration, with a pipeline trace (`single` | `stall` | `fwd` | `pred`):
 
 ```bash
 ./sim/run.sh pred array_sum +trace
@@ -76,18 +122,13 @@ gtkwave results/array_sum.fwd.vcd
 1. Assembles every program in `programs/`
 2. Builds all three configurations plus the unit tests
 3. **Unit tests** — ALU and register file
-4. **Directed hazard test** — 34 assertions covering every hazard class,
-   run on all four configurations
+4. **Directed hazard test** — 34 assertions covering every hazard class, run on all four configurations
 5. **Benchmarks** — 7 programs x 4 configurations
-6. **Golden-model check** — the architectural signature (x1–x31 and
-   dmem[0–31]) of each pipelined run must match the single-cycle run
-   byte for byte. This is what actually proves the pipeline correct;
-   counting cycles only proves it is fast.
+6. **Golden-model check** — the architectural signature (x1–x31 and dmem[0–31]) of each pipelined run must match the single-cycle run byte for byte. This is what actually proves the pipeline correct; counting cycles only proves it is fast.
 7. Generates `results/perf.csv` and `results/perf.md`
 8. Generates pipeline traces and VCD waveforms for the report
 
-Exit status is non-zero if anything fails, so it works as a
-pre-submission gate.
+Exit status is non-zero if anything fails, so it works as a pre-submission gate.
 
 ---
 
@@ -131,19 +172,23 @@ tb/
   tb_hazards.v         directed self-checking hazard test (34 checks)
 
 programs/              benchmarks in assembly, plus generated .hex and .lst
+
 tools/
   asm.py               assembler for the 7-instruction subset
   perf_table.py        perf.csv -> report tables
   synth_table.py       Yosys logs -> report tables
   fpga_table.py        Vivado results -> report tables
+
 sim/
   run.sh               one config, one program
   run_all.sh           full regression + sweep
   synth.sh             Yosys area and depth
+
 fpga/
   run_vivado.tcl       one-command FPGA characterisation, all 4 configs
   wrappers/            one wrapper per configuration, identical ports
   README.md            how to run it, options, troubleshooting
+
 docs/                  report and per-member notes
 results/               all generated output (CSV, markdown, traces, VCDs)
 ```
@@ -160,8 +205,7 @@ results/               all generated output (CSV, markdown, traces, VCDs)
 | **D** | **Back end** | **`mem_stage.v`, `mem_wb.v`, `wb_stage.v`, `dmem.v`, `hazard_unit.v`** |
 | E | Verification & infra | `tb_*.v`, `asm.py`, `perf_table.py`, `synth_table.py`, `sim/*.sh` |
 
-Every RTL file carries an `Owner:` line in its header comment.
-Per-member notes for the viva are in `docs/`.
+Every RTL file carries an `Owner:` line in its header comment. Per-member notes for the viva are in `docs/`.
 
 ---
 
@@ -176,36 +220,18 @@ Measured over 7 benchmarks, 523 instructions total:
 | Pipelined, forwarding | 847 | 1.620 | 0.617 | 357 (1.42x) | 1.01x |
 | Pipelined, fwd + predictor | 651 | 1.245 | 0.803 | 196 (1.30x) | **1.32x** |
 
-The last column is the central result, and it is worth reading down:
-**the naive pipeline is slower than the single-cycle core**, forwarding
-brings it to break-even, and the predictor makes it a genuine win.
-Pipelining on its own is not a performance win — pipelining plus hazard
-mitigation is. (Net speedup multiplies the cycle ratio by the 1.64x
-clock-period ratio from synthesis; see §7.5 of the report.)
+The last column is the central result, and it is worth reading down: **the naive pipeline is slower than the single-cycle core**, forwarding brings it to break-even, and the predictor makes it a genuine win. Pipelining on its own is not a performance win — pipelining plus hazard mitigation is. (Net speedup multiplies the cycle ratio by the 1.64x clock-period ratio from synthesis; see §7.5 of the report.)
 
-Together the two features remove **553 of the 681** hazard cycles the
-naive pipeline paid — 81% of the overhead — for +1359 gates and +136
-flip-flops.
+Together the two features remove **553 of the 681** hazard cycles the naive pipeline paid — 81% of the overhead — for +1359 gates and +136 flip-flops.
 
-**Branch prediction accuracy rises from 11.7% to 93.3%**, removing 98 of
-106 mispredictions. The predictor misses exactly twice per loop on every
-benchmark: once on entry (counter starts weakly not-taken) and once on
-exit.
+**Branch prediction accuracy rises from 11.7% to 93.3%**, removing 98 of 106 mispredictions. The predictor misses exactly twice per loop on every benchmark: once on entry (counter starts weakly not-taken) and once on exit.
 
-Steady-state CPI on the longest benchmark (`vecsum64`, 260 instructions)
-is **1.277**, which is the figure to quote for sustained performance.
-`fib` reaches **1.076** — within 7% of the ideal for a scalar pipeline.
+Steady-state CPI on the longest benchmark (`vecsum64`, 260 instructions) is **1.277**, which is the figure to quote for sustained performance. `fib` reaches **1.076** — within 7% of the ideal for a scalar pipeline.
 
 ### Still to measure
 
-FPGA utilisation and Fmax. Vivado does not run on macOS, so this needs a
-team member on Windows or Linux; the flow is written and reduced to two
-commands (above), takes about an hour unattended, and needs no board.
-It fills §7.8 of the report, replaces the one estimated figure in the
-headline speedup, and settles whether the predictor stays free in clock
-period once Vivado maps the adders onto carry chains. See
-[docs/VIVADO.md](docs/VIVADO.md).
+FPGA utilisation and Fmax. Vivado does not run on macOS, so this needs a team member on Windows or Linux; the flow is written and reduced to two commands (above), takes about an hour unattended, and needs no board. It fills §7.8 of the report, replaces the one estimated figure in the headline speedup, and settles whether the predictor stays free in clock period once Vivado maps the adders onto carry chains. See [docs/VIVADO.md](docs/VIVADO.md).
 
 Full tables: `results/perf.md` and `results/synth_summary.md`.
-Discussion, including why the net speedup over the single-cycle core is
-**not** the cycle-count ratio: `docs/REPORT.md`.
+
+Discussion, including why the net speedup over the single-cycle core is **not** the cycle-count ratio: `docs/REPORT.md`.
