@@ -1,0 +1,696 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Design and Evaluation of a Five-Stage Pipelined RISC-V Processor
+with Operand Forwarding and Dynamic Branch Prediction\\
+{\footnotesize Modern Computer Architecture --- Phase I}}
+
+% ===========================================================
+% TODO before submission: replace the three placeholder names
+% and all roll numbers with the real values.
+% ===========================================================
+\author{
+\IEEEauthorblockN{Kunal Vats}
+\IEEEauthorblockA{\textit{Dept. of Computer Applications} \\
+\textit{{[Institution]}}\\
+{[Roll No.]} \\
+1kunalvats9@gmail.com}
+\and
+\IEEEauthorblockN{Dev Kothari}
+\IEEEauthorblockA{\textit{Dept. of Computer Applications} \\
+\textit{{[Institution]}}\\
+{[Roll No.]} \\
+devkothari32@gmail.com}
+\and
+\IEEEauthorblockN{{[Member 3]}}
+\IEEEauthorblockA{\textit{Dept. of Computer Applications} \\
+\textit{{[Institution]}}\\
+{[Roll No.]} \\
+{[email]}}
+\and
+\IEEEauthorblockN{{[Member 4]}}
+\IEEEauthorblockA{\textit{Dept. of Computer Applications} \\
+\textit{{[Institution]}}\\
+{[Roll No.]} \\
+{[email]}}
+\and
+\IEEEauthorblockN{{[Member 5]}}
+\IEEEauthorblockA{\textit{Dept. of Computer Applications} \\
+\textit{{[Institution]}}\\
+{[Roll No.]} \\
+{[email]}}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper presents the design, implementation and quantitative evaluation
+of a five-stage pipelined RISC-V processor implementing an RV32I subset
+(\texttt{add}, \texttt{sub}, \texttt{addi}, \texttt{lw}, \texttt{sw},
+\texttt{beq}, \texttt{bne}) in Verilog. Rather than building a single
+processor, we construct \emph{four} cores from a common RTL base: a
+single-cycle reference, and three pipelined configurations that differ
+only by parameters---no hazard mitigation, operand forwarding, and
+forwarding combined with a 64-entry two-bit dynamic branch predictor.
+This parameterisation allows each architectural feature to be isolated and
+measured independently. Correctness is established by a three-tier
+methodology: unit tests, 34 directed hazard assertions, and a golden-model
+comparison in which every pipelined configuration must reproduce the
+single-cycle core's architectural state exactly. Across seven benchmarks
+totalling 523 instructions, cycles per instruction fall from 2.302 for the
+unmitigated pipeline to 1.620 with forwarding and 1.245 with prediction,
+while branch prediction accuracy rises from 11.7\% to 93.3\%. Combining
+cycle counts with gate-level clock-period estimates yields the paper's
+central finding: relative to the single-cycle reference, the unmitigated
+pipeline is \emph{slower} (0.71$\times$), forwarding achieves parity
+(1.01$\times$), and only the addition of branch prediction produces a
+genuine speedup (1.32$\times$). Pipelining alone is not a performance win;
+pipelining together with hazard mitigation is.
+\end{abstract}
+
+\begin{IEEEkeywords}
+RISC-V, instruction pipelining, data hazards, operand forwarding, branch
+prediction, CPI, Verilog, processor verification
+\end{IEEEkeywords}
+
+% ===========================================================
+\section{Introduction}
+
+Instruction pipelining is the foundational technique of modern processor
+design, and the five-stage pipeline---fetch, decode, execute, memory,
+write-back---remains the standard pedagogical vehicle for teaching it
+\cite{patterson2020}. Its appeal is that it decomposes a long
+combinational path into stages that can operate concurrently, raising
+throughput without increasing the work done per instruction.
+
+The difficulty is that this concurrency is only correct if the dependencies
+between overlapping instructions are respected. A pipelined datapath that
+ignores hazards computes wrong answers; one that handles them by stalling
+unconditionally computes right answers slowly. The engineering content of
+the problem lies entirely in the mitigation mechanisms---operand
+forwarding, hazard interlocks, and control-flow speculation---and in
+determining whether they are worth their cost.
+
+A common weakness in undergraduate and postgraduate implementations of
+this exercise is that a single finished processor is built and a single
+CPI figure is reported. Such a figure is difficult to interpret: it
+confounds the cost of pipelining, the benefit of forwarding and the
+benefit of prediction into one number, and it cannot answer whether any
+individual mechanism justified its area.
+
+\subsection{Contributions}
+
+This work makes the following contributions:
+
+\begin{enumerate}
+\item A synthesisable five-stage pipelined RISC-V core supporting an RV32I
+      subset, with full operand forwarding, load-use interlocking, and a
+      two-bit dynamic branch predictor.
+\item A \emph{four-configuration} methodology in which three pipelined
+      variants are generated from identical RTL by parameter change alone,
+      so that each measurement isolates exactly one architectural feature.
+\item A three-tier verification strategy culminating in golden-model
+      equivalence against a single-cycle reference, together with a
+      cycle-accounting invariant that independently validates the
+      performance counters.
+\item A quantitative evaluation combining cycle counts with synthesised
+      area and critical-path depth, including a sensitivity analysis that
+      identifies the conditions under which pipelining becomes
+      worthwhile.
+\end{enumerate}
+
+% ===========================================================
+\section{Literature Review}
+
+\subsection{The RISC-V Instruction Set}
+
+RISC-V is an open, royalty-free instruction set architecture developed at
+UC Berkeley and now maintained by RISC-V International
+\cite{riscvisa}. Its base integer subset, RV32I, comprises a small,
+regular, fixed-length instruction encoding designed explicitly to be
+straightforward to implement in hardware. Register \texttt{x0} is
+hardwired to zero, immediate fields are placed to maximise sign-bit
+reuse, and there are no condition codes or implicit side effects. These
+properties make RV32I well suited to a teaching implementation, and they
+are the reason the decode and immediate-generation logic in this work is
+comparatively simple.
+
+Open-source implementations span a wide complexity range. PicoRV32
+\cite{picorv32} is a size-optimised multi-cycle core intended for FPGA
+soft-core use, while the Rocket Chip generator \cite{rocketchip} produces
+cache-coherent out-of-order-capable designs. Our work sits at the
+pedagogical end of this spectrum: the objective is measurement and
+analysis of a classical pipeline, not competitive performance.
+
+\subsection{Pipelining and Hazard Classification}
+
+The canonical treatment of the five-stage pipeline and its hazards is due
+to Patterson and Hennessy \cite{patterson2020}, with the quantitative
+framework developed further in \cite{hennessy2017}. Hazards are classified
+as structural (two instructions competing for one resource), data (an
+instruction requiring a result not yet available), and control (the next
+instruction address not yet known).
+
+Among data hazards, only read-after-write (RAW) can occur in an in-order
+single-issue pipeline; write-after-read and write-after-write arise only
+when instructions complete out of order, as in the dynamically scheduled
+designs introduced by Tomasulo \cite{tomasulo1967}. We confirm this
+analysis for our design in Section III and use it to bound the
+verification effort.
+
+Operand forwarding---routing a result from a pipeline register directly to
+a later instruction's execute input rather than waiting for write-back---is
+the standard mitigation for RAW hazards. The literature is consistent that
+one case resists it: a load followed immediately by a consumer of the
+loaded value, where the data is simply not available in time
+\cite{patterson2020}. This load-use hazard requires a one-cycle
+interlock, and our measurements in Section V confirm it as the dominant
+residual overhead once all other mechanisms are in place.
+
+\subsection{Branch Prediction}
+
+Control hazards are addressed by predicting branch outcomes. Smith's
+foundational study \cite{smith1981} evaluated several strategies and
+established the two-bit saturating counter as an effective and inexpensive
+dynamic predictor. The key insight is hysteresis: a single-bit predictor
+mispredicts twice per loop, once on the terminating iteration and again on
+the first iteration of the next execution, because the terminating
+iteration has already flipped the bit. A two-bit counter absorbs one
+anomalous outcome without changing its prediction.
+
+Subsequent work increased accuracy substantially. Yeh and Patt
+\cite{yehpatt1991} introduced two-level adaptive predictors that correlate
+on branch history, and McFarling \cite{mcfarling1993} showed that combining
+predictors with a selector outperforms either component. These schemes
+exploit correlation between branches, which the loop-dominated benchmarks
+used in this work do not exhibit; we therefore implement the two-bit
+scheme of \cite{smith1981} and discuss the correlating alternatives as
+future work.
+
+\subsection{Verification Methodology}
+
+Processor verification by comparison against a reference model is
+long-established industrial practice, and is the basis of the RISC-V
+architectural test framework \cite{riscvarchtest}. The essential idea is
+that the design under test and a trusted reference execute identical
+programs, after which their architecturally visible state is compared. We
+adopt this approach, using our own single-cycle implementation as the
+reference, which has the advantage that the two share an instruction
+decoder and can therefore be compared instruction-for-instruction without
+an ISA simulator.
+
+\subsection{Positioning of This Work}
+
+The individual mechanisms described above are well understood and
+textbook-standard. The contribution here is methodological: by generating
+all pipelined configurations from one parameterised source, the marginal
+cost and marginal benefit of each mechanism can be attributed
+unambiguously. We are not aware of this being standard practice in
+teaching implementations, and Section V shows it producing a conclusion
+that a single-configuration study would miss entirely.
+
+% ===========================================================
+\section{Proposed Solution}
+
+\subsection{Instruction Set Subset}
+
+We implement \texttt{add}, \texttt{sub}, \texttt{addi}, \texttt{lw},
+\texttt{sw}, \texttt{beq} and \texttt{bne}, with \texttt{nop} encoded
+canonically as \texttt{addi x0, x0, 0}. This subset exercises every
+hazard class---register-to-register dependencies, memory dependencies and
+control flow---while keeping the decoder small enough that it is not a
+source of defects. Jumps, shifts, logical operations and comparisons are
+excluded; their consequences are discussed in Section VI.
+
+\subsection{Microarchitecture}
+
+The datapath is partitioned into the five classical stages separated by
+four pipeline registers (IF/ID, ID/EX, EX/MEM, MEM/WB). Several design
+decisions are worth recording.
+
+\textbf{Harvard memory organisation.} Instruction and data memories are
+separate, which eliminates the structural hazard between fetch and memory
+access entirely. A unified memory would force a stall on every load and
+store.
+
+\textbf{Control signals travel with data.} All control is decoded once, in
+ID, and carried down the pipeline inside the pipeline registers alongside
+the operands. Control is never recomputed in a later stage. Recomputing it
+from whichever instruction a later stage happens to hold is a classical
+defect in which control is applied to the wrong instruction.
+
+\textbf{Register file with write-to-read bypass.} The register file
+provides two combinational read ports and one synchronous write port, with
+\texttt{x0} hardwired to zero. An internal bypass returns the value being
+written in the same cycle, which removes the WB-to-ID hazard before the
+hazard logic observes it, reducing the forwarding network to two sources.
+This bypass is parameterised, because in the single-cycle core the read and
+write belong to the \emph{same} instruction and the bypass would close a
+combinational loop.
+
+\textbf{Branch resolution in EX.} Resolving conditional branches in the
+execute stage rather than in memory reduces the misprediction penalty from
+three wasted fetch slots to two.
+
+\subsection{Hazard Analysis}
+
+For this in-order, single-issue, single-write-port design we establish that
+write-after-read and write-after-write hazards cannot occur: instructions
+issue in order, each writes at most one register, and all writes occur in
+write-back in program order. Structural hazards cannot occur given separate
+memories and a register file with exactly the required port count. The
+design must therefore handle RAW data hazards and control hazards, and
+nothing else.
+
+\subsection{Operand Forwarding}
+
+Two bypass paths are provided: EX/MEM to EX for a distance-one dependency,
+and MEM/WB to EX for distance two. Dependencies at distance three and
+beyond are satisfied by the register file bypass described above.
+
+Two correctness conditions are essential. First, when both pipeline
+registers hold writes to the same architectural register, the EX/MEM value
+must take priority, since it belongs to the younger instruction whose write
+occurs later in program order. Second, forwarding from a destination of
+\texttt{x0} must be suppressed, because such writes are discarded and the
+forwarded value would never become architecturally visible.
+
+\subsection{Load-Use Interlock}
+
+A load in EX whose destination is read by the instruction in ID constitutes
+the one RAW hazard forwarding cannot resolve: the loaded value is returned
+\emph{during} the cycle in which the consumer requires it at its input. One
+bubble is therefore unavoidable, after which the MEM/WB path supplies the
+value. Detection is qualified by signals indicating whether the instruction
+in ID genuinely reads each source register, since for \texttt{addi} and
+\texttt{lw} the \texttt{rs2} field is part of the immediate; without this
+qualification the interlock would stall on false dependencies and silently
+inflate CPI.
+
+\subsection{Dynamic Branch Prediction}
+
+The predictor is a 64-entry table of two-bit saturating counters indexed by
+\texttt{PC[7:2]}, read in IF and updated in EX when a branch resolves,
+following \cite{smith1981}. Counters reset to the weakly-not-taken state,
+so the first prediction for any branch matches what a static not-taken
+policy would produce; the comparison between configurations therefore
+isolates the effect of learning.
+
+No branch target buffer is required. Because the instruction memory read is
+combinational, the instruction word is available in IF, so the opcode
+identifies a branch and a B-format immediate decoder with one adder
+produces the target directly. The cost is additional logic depth in IF,
+quantified in Section V.
+
+Prediction is verified in EX by comparing the recorded prediction against
+the computed outcome. A predictor capable of predicting \emph{taken} can be
+wrong in either direction, so the redirect target is a multiplexer
+selecting the branch target or the fall-through address, rather than the
+branch target alone as static not-taken prediction would require.
+
+\subsection{Flush Safety}
+
+When a bubble is inserted, every control bit is cleared, not only the
+validity bit. Were validity alone cleared, a flushed store would retain an
+asserted memory-write enable and would corrupt data memory---a defect
+whose symptom appears only much later, when the corrupted location is read
+back. A directed test exists specifically to detect this condition.
+
+\subsection{The Four-Configuration Methodology}
+
+Table~\ref{tab:configs} summarises the configurations. The three pipelined
+variants are produced from identical source by parameter override, so any
+difference in measured cycles or synthesised area is attributable to the
+single feature that changed.
+
+\begin{table}[htbp]
+\caption{Evaluated Configurations}
+\begin{center}
+\begin{tabular}{llp{3.6cm}}
+\toprule
+\textbf{Name} & \textbf{Parameters} & \textbf{Role} \\
+\midrule
+\texttt{single} & --- & Single-cycle golden reference; CPI $=1.000$ by construction \\
+\texttt{stall}  & \texttt{FORWARD\_EN=0} \texttt{PREDICTOR=0} & Pipeline with no hazard mitigation \\
+\texttt{fwd}    & \texttt{FORWARD\_EN=1} \texttt{PREDICTOR=0} & Adds the forwarding network \\
+\texttt{pred}   & \texttt{FORWARD\_EN=1} \texttt{PREDICTOR=1} & Adds the two-bit predictor \\
+\bottomrule
+\end{tabular}
+\label{tab:configs}
+\end{center}
+\end{table}
+
+% ===========================================================
+\section{Implementation and Verification}
+
+\subsection{Toolchain}
+
+The design is written in Verilog-2001 and simulated with Icarus Verilog
+\cite{iverilog}; waveforms are inspected in GTKWave. Technology-independent
+synthesis uses the Yosys Open SYnthesis Suite \cite{yosys} to obtain cell
+counts and longest-topological-path figures. An FPGA flow targeting a
+Xilinx Artix-7 device is prepared for Phase II.
+
+A purpose-written assembler translates the supported subset into hex memory
+images, emitting a listing that pairs each encoding with its source line.
+Programs terminate by a simulation-only convention in which the word
+\texttt{0x00000000}---not a legal RISC-V encoding---halts fetch, allowing
+retired instructions to be counted exactly without prior knowledge of
+program length.
+
+\subsection{Three-Tier Verification}
+
+\textbf{Unit tests} cover the ALU and the register file, the latter
+specifically confirming that \texttt{x0} reads as zero, discards writes,
+and does not participate in the write-to-read bypass.
+
+\textbf{Directed hazard tests} comprise 34 assertions grouped by hazard
+class: distance-one and distance-two forwarding, forwarding priority,
+\texttt{x0} exclusion, the load-use interlock, store-data forwarding,
+not-taken and taken branches, operand forwarding into the branch
+comparator, and the flushed-store case described in Section III-G. Because
+the expected values are architectural, the same assertions pass on all four
+configurations irrespective of how many bubbles each requires.
+
+\textbf{Golden-model comparison} is the decisive check. Each configuration
+executes every benchmark and emits an architectural signature comprising
+registers \texttt{x1}--\texttt{x31} and the first 32 words of data memory.
+Every pipelined signature must match the single-cycle signature exactly.
+
+\subsection{Cycle-Accounting Invariant}
+
+For every pipelined run the harness verifies
+\begin{equation}
+C = I + 4 + S + 2M
+\label{eq:accounting}
+\end{equation}
+where $C$ is elapsed cycles, $I$ retired instructions, $4$ the pipeline
+fill, $S$ stall cycles and $M$ mispredictions. This holds exactly on all 21
+pipelined runs. It is a strong independent check: an unaccounted cycle
+would indicate a stall or flush taken but not reported, and a missing one
+would indicate a defective counter.
+
+\subsection{Defects Found}
+
+Three defects were found by this infrastructure rather than by inspection,
+and are recorded because verification quality is itself an evaluation
+criterion. First, the register-file bypass closed a combinational loop in
+the single-cycle core for any instruction reusing its destination as a
+source; three benchmarks passed before one triggered it. Second, a
+testbench race in reset deassertion made cycle counts non-deterministic by
+$\pm1$, sufficient to corrupt every CPI figure. Third, under
+\texttt{FORWARD\_EN=0} the forwarding unit's sensitivity list constant-folded
+to empty, leaving its outputs undefined throughout simulation; results
+remained correct only because an undefined case selector falls through to a
+default branch that happened to be correct.
+
+% ===========================================================
+\section{Results}
+
+All measurements are over seven benchmarks totalling 523 instructions,
+spanning dependency-free code, dependency chains, load-use sequences,
+counted loops and branch-dominated control flow.
+
+\subsection{Cycles per Instruction}
+
+\begin{table}[htbp]
+\caption{CPI and IPC by Configuration (523 instructions)}
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Configuration} & \textbf{Cycles} & \textbf{CPI} & \textbf{IPC} & \textbf{Saved} \\
+\midrule
+Single-cycle          & 523  & 1.000 & 1.000 & --- \\
+Pipelined, stall-only & 1204 & 2.302 & 0.434 & --- \\
+Pipelined, forwarding & 847  & 1.620 & 0.617 & 357 \\
+Pipelined, fwd + pred & 651  & 1.245 & 0.803 & 196 \\
+\bottomrule
+\end{tabular}
+\label{tab:cpi}
+\end{center}
+\end{table}
+
+Table~\ref{tab:cpi} shows that the two mitigation mechanisms together
+remove 553 of the 681 hazard cycles incurred by the unmitigated pipeline,
+or 81\% of the overhead. On the longest benchmark, a 64-element vector sum
+of 260 instructions, steady-state CPI is 1.277; on an iterative Fibonacci
+computation it reaches 1.076, within 7\% of the ideal for a scalar
+pipeline.
+
+\subsection{Branch Prediction Accuracy}
+
+\begin{table}[htbp]
+\caption{Branch Prediction Accuracy}
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Benchmark} & \textbf{Br.} & \textbf{Taken} & \textbf{Static} & \textbf{2-bit} \\
+\midrule
+\texttt{array\_sum} & 16  & 15  & 6.2\%  & 87.5\% \\
+\texttt{branch\_mix}& 20  & 9   & 55.0\% & 90.0\% \\
+\texttt{fib}        & 20  & 19  & 5.0\%  & 90.0\% \\
+\texttt{vecsum64}   & 64  & 63  & 1.6\%  & 96.9\% \\
+\midrule
+\textbf{Total}      & 120 & 106 & 11.7\% & \textbf{93.3\%} \\
+\bottomrule
+\end{tabular}
+\label{tab:bp}
+\end{center}
+\end{table}
+
+Accuracy rises from 11.7\% to 93.3\%, eliminating 98 of 106 mispredictions
+and 196 cycles of flushed work. Notably, the predictor mispredicts
+\emph{exactly twice per loop} on every benchmark: once on entry, because
+the counter initialises to weakly-not-taken, and once on exit. This matches
+the behaviour predicted by \cite{smith1981} precisely.
+
+\subsection{Synthesised Area}
+
+\begin{table}[htbp]
+\caption{Marginal Cost of Each Mechanism (Yosys, memories excluded)}
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Change} & \textbf{Cells} & \textbf{Flip-flops} \\
+\midrule
+Single-cycle $\rightarrow$ pipelined & $+1497$ & $+413$ \\
+Adding operand forwarding            & $+288$  & $\mathbf{+0}$ \\
+Adding the two-bit predictor         & $+1071$ & $+136$ \\
+\bottomrule
+\end{tabular}
+\label{tab:area}
+\end{center}
+\end{table}
+
+Operand forwarding is the most favourable mechanism in the design: 288
+gates and \emph{no} sequential state, because it is purely combinational,
+in exchange for a 1.42$\times$ cycle-count improvement. The predictor's 136
+flip-flops are almost entirely the counter table itself (64 entries
+$\times$ 2 bits), with two further bits carrying the prediction down the
+pipeline.
+
+Per-stage path analysis identifies EX as the deepest stage at 70 gate
+levels, of which the 32-bit ALU adder alone accounts for 67. The predictor
+increases IF depth from 30 to 56 levels, which remains below EX and
+therefore does not lengthen the critical path in this implementation.
+
+\subsection{The Central Result}
+
+Cycle counts alone understate pipelining, because the single-cycle core
+requires a clock period covering all five stages in series whereas the
+pipelined core requires only the deepest single stage. The appropriate
+comparison is
+\begin{equation}
+\text{speedup} = \frac{C_{\text{single}}}{C_{\text{cfg}}}
+                 \times \frac{T_{\text{single}}}{T_{\text{cfg}}}
+\label{eq:speedup}
+\end{equation}
+
+\begin{table}[htbp]
+\caption{Net Speedup Relative to the Single-Cycle Reference}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Configuration} & \textbf{Cycle} & \textbf{Clock} & \textbf{Net} \\
+\midrule
+Pipelined, stall-only & 0.434$\times$ & 1.64$\times$ & 0.71$\times$ \\
+Pipelined, forwarding & 0.617$\times$ & 1.64$\times$ & 1.01$\times$ \\
+Pipelined, fwd + pred & 0.803$\times$ & 1.64$\times$ & \textbf{1.32}$\times$ \\
+\bottomrule
+\end{tabular}
+\label{tab:speedup}
+\end{center}
+\end{table}
+
+Table~\ref{tab:speedup} is the principal result of this work. Read in
+sequence, the unmitigated pipeline is \emph{slower} than the single-cycle
+reference it replaced; forwarding restores parity; and only with branch
+prediction does the design become faster. \textbf{Pipelining is not by
+itself a performance improvement---pipelining together with hazard
+mitigation is.} A study reporting only the final configuration would
+observe a 1.32$\times$ speedup and attribute it to pipelining, concealing
+the fact that the mitigation mechanisms, not the pipeline, are responsible
+for the entire gain.
+
+\subsection{Sensitivity to Memory Latency}
+
+Because both cores are evaluated with memories excluded from the timing
+path, the single-cycle core is flattered: its critical path contains an
+instruction fetch and a data access in series, whereas no single pipeline
+stage contains both. Modelling a memory read delay $M$ in gate levels, the
+net speedup rises from 1.32$\times$ at $M=0$ to 1.64$\times$ at $M=20$,
+beyond which the critical stage migrates from EX to IF and the ratio
+plateaus. This is a quantitative statement of why practical pipelines
+require caches and why deeper pipelines subdivide fetch and memory access.
+
+% ===========================================================
+\section{Individual Contributions}
+
+% ===========================================================
+% TODO: replace placeholder names. If the team has fewer than
+% five members, merge rows as follows: Front End + Decode,
+% Execute + Back End, Verification + Infrastructure.
+% ===========================================================
+
+\begin{table}[htbp]
+\caption{Division of Work}
+\begin{center}
+\begin{tabular}{p{1.9cm}p{2.1cm}p{3.3cm}}
+\toprule
+\textbf{Member} & \textbf{Area} & \textbf{Modules and artefacts} \\
+\midrule
+{[Member 3]} & Front end &
+\texttt{pc\_if.v}, \texttt{if\_id.v}, \texttt{imem.v},
+\texttt{branch\_predictor.v}; next-PC selection, prediction lookup,
+flush handling \\
+\addlinespace
+Dev Kothari & Decode &
+\texttt{decode\_stage.v}, \texttt{id\_ex.v}, \texttt{regfile.v},
+\texttt{imm\_gen.v}, \texttt{control\_unit.v}; control bundle,
+immediate formats, register-file bypass \\
+\addlinespace
+{[Member 4]} & Execute &
+\texttt{ex\_stage.v}, \texttt{alu.v}, \texttt{branch\_cmp.v},
+\texttt{forwarding\_unit.v}, \texttt{ex\_mem.v}; bypass network,
+prediction check and redirect \\
+\addlinespace
+Kunal Vats & Back end &
+\texttt{mem\_stage.v}, \texttt{mem\_wb.v}, \texttt{wb\_stage.v},
+\texttt{dmem.v}, \texttt{hazard\_unit.v}; load-use interlock, stall and
+bubble generation, flush safety \\
+\addlinespace
+{[Member 5]} & Verification and infrastructure &
+\texttt{tb\_*.v}, assembler, benchmark programs, regression and synthesis
+scripts, results tooling \\
+\bottomrule
+\end{tabular}
+\label{tab:contrib}
+\end{center}
+\end{table}
+
+Every RTL source file records its owner in a header comment, and the
+division above is reflected in the repository commit history.
+
+% ===========================================================
+\section{Limitations and Future Work}
+
+The instruction subset excludes jumps, and therefore function calls;
+large-constant formation via \texttt{lui}; shifts and logical operations;
+and magnitude comparison, which is why no sorting benchmark is included.
+There are no exceptions, interrupts or privilege modes, and both memories
+are idealised single-cycle structures without caching.
+
+The data memory uses an asynchronous read, which is required for the
+loaded value to be captured by MEM/WB within a single memory stage but
+prevents inference of FPGA block RAM. The predictor is direction-only and
+untagged, so widely separated branches may alias; no benchmark here is
+large enough to exhibit this.
+
+Three directions follow naturally. First, FPGA implementation to obtain
+measured $F_{\max}$ in place of the gate-level clock-period estimate used
+in Table~\ref{tab:speedup}; this will also determine whether the predictor
+remains free in clock period once adders map onto dedicated carry chains.
+Second, a correlating predictor in the style of \cite{yehpatt1991} or
+\cite{mcfarling1993}. Third, and indicated most strongly by our own
+results, compiler scheduling to fill the load-use delay slot, which is now
+the dominant remaining source of lost cycles.
+
+% ===========================================================
+\section{Conclusion}
+
+We have designed, verified and evaluated a five-stage pipelined RISC-V
+processor in four configurations generated from a single parameterised
+source. Verification combines unit tests, 34 directed hazard assertions and
+golden-model equivalence against a single-cycle reference, with an
+independent cycle-accounting invariant holding exactly across all runs.
+Operand forwarding and two-bit dynamic branch prediction together remove
+81\% of hazard overhead, reducing CPI from 2.302 to 1.245 and raising
+branch prediction accuracy from 11.7\% to 93.3\%.
+
+The principal finding is that these mechanisms are not refinements but
+prerequisites: without them the pipelined design is measurably slower than
+the single-cycle core it replaces. Isolating each mechanism by construction
+was what made this visible, and we regard the methodology as the more
+transferable of the two contributions.
+
+% ===========================================================
+\begin{thebibliography}{00}
+
+\bibitem{riscvisa} A. Waterman and K. Asanovi\'{c}, Eds., \emph{The RISC-V
+Instruction Set Manual, Volume I: Unprivileged ISA}, RISC-V
+International, 2019.
+
+\bibitem{patterson2020} D. A. Patterson and J. L. Hennessy, \emph{Computer
+Organization and Design RISC-V Edition: The Hardware/Software Interface},
+2nd ed. Cambridge, MA, USA: Morgan Kaufmann, 2020.
+
+\bibitem{hennessy2017} J. L. Hennessy and D. A. Patterson, \emph{Computer
+Architecture: A Quantitative Approach}, 6th ed. Cambridge, MA, USA: Morgan
+Kaufmann, 2017.
+
+\bibitem{smith1981} J. E. Smith, ``A study of branch prediction
+strategies,'' in \emph{Proc. 8th Annu. Symp. Computer Architecture (ISCA)},
+1981, pp. 135--148.
+
+\bibitem{yehpatt1991} T.-Y. Yeh and Y. N. Patt, ``Two-level adaptive
+training branch prediction,'' in \emph{Proc. 24th Annu. Int. Symp.
+Microarchitecture (MICRO)}, 1991, pp. 51--61.
+
+\bibitem{mcfarling1993} S. McFarling, ``Combining branch predictors,''
+Digital Equipment Corp. Western Research Laboratory, Tech. Note TN-36,
+1993.
+
+\bibitem{tomasulo1967} R. M. Tomasulo, ``An efficient algorithm for
+exploiting multiple arithmetic units,'' \emph{IBM Journal of Research and
+Development}, vol. 11, no. 1, pp. 25--33, 1967.
+
+\bibitem{rocketchip} K. Asanovi\'{c} \emph{et al.}, ``The Rocket Chip
+generator,'' EECS Dept., Univ. California, Berkeley, Tech. Rep.
+UCB/EECS-2016-17, 2016.
+
+\bibitem{picorv32} C. Wolf, ``PicoRV32: A size-optimized RISC-V CPU.''
+[Online]. Available: \url{https://github.com/YosysHQ/picorv32}
+
+\bibitem{yosys} C. Wolf, ``Yosys Open SYnthesis Suite.'' [Online].
+Available: \url{https://yosyshq.net/yosys/}
+
+\bibitem{iverilog} S. Williams, ``Icarus Verilog.'' [Online]. Available:
+\url{http://iverilog.icarus.com/}
+
+\bibitem{riscvarchtest} RISC-V International, ``RISC-V Architectural Test
+Suite.'' [Online]. Available:
+\url{https://github.com/riscv-non-isa/riscv-arch-test}
+
+\end{thebibliography}
+
+\end{document}

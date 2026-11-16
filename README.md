@@ -2,6 +2,29 @@
 
 Modern Computer Architecture — Project 3
 
+## Phase I submission
+
+| Deliverable | Location |
+|---|---|
+| **IEEE report (PDF)** | [`docs/IEEE_Report.pdf`](docs/IEEE_Report.pdf) — source in [`docs/ieee_report/main.tex`](docs/ieee_report/main.tex) |
+| **Prototype video** | [Google Drive folder](https://drive.google.com/drive/folders/1bk4xffMmVMXfEukjMprLkXBifDkPfi6K?usp=sharing) |
+| **Prototype files** | all RTL in [`rtl/`](rtl/), testbenches in [`tb/`](tb/), programs in [`programs/`](programs/) |
+| **Artefacts** | [`results/`](results/) — CPI/IPC tables, synthesis summary, pipeline traces, waveforms |
+| **Video script** | [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md) |
+| **Technical report** | [`docs/REPORT.md`](docs/REPORT.md) — the long-form version the IEEE paper condenses |
+
+Reproduce every number in the report with two commands:
+
+```bash
+./sim/run_all.sh
+```
+
+```bash
+./sim/synth.sh
+```
+
+---
+
 This repository contains a five-stage pipelined RISC-V processor implemented in Verilog. The design is built in **four configurations** so the individual effects of pipelining, operand forwarding, and dynamic branch prediction can be measured directly rather than assumed:
 
 | Configuration | Parameters | Purpose |
