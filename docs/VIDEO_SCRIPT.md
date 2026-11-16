@@ -14,7 +14,7 @@ each person speaks only about their own group:
 
 | Presenter | Covers | Files |
 |---|---|---|
-| **P1** | Front end + Decode (A+B) | `pc_if.v`, `if_id.v`, `imem.v`, `branch_predictor.v`, `decode_stage.v`, `id_ex.v`, `regfile.v`, `imm_gen.v`, `control_unit.v` |
+| **Joshit** | Front end + Decode (A+B) | `pc_if.v`, `if_id.v`, `imem.v`, `branch_predictor.v`, `decode_stage.v`, `id_ex.v`, `regfile.v`, `imm_gen.v`, `control_unit.v` |
 | **Kunal** | Execute + Back end (C+D) | `ex_stage.v`, `alu.v`, `branch_cmp.v`, `forwarding_unit.v`, `ex_mem.v`, `mem_stage.v`, `mem_wb.v`, `wb_stage.v`, `dmem.v`, `hazard_unit.v` |
 | **P2** | Verification + Performance (E) | `tb_*.v`, `asm.py`, `perf_table.py`, `synth_table.py`, `fpga_table.py`, `sim/*.sh`, `fpga/` |
 
@@ -56,7 +56,7 @@ deterministic, so a failure means a typo or wrong directory.
 
 ---
 
-# PART 1 — P1: Design and architecture (~4 min)
+# PART 1 — Joshit: Design and architecture (~4 min)
 
 ### Opening (~25 s)
 

@@ -3,7 +3,7 @@
 
 Modern Computer Architecture — Project 3
 
-A five-stage pipelined RISC-V processor in Verilog, built in **four configurations** so the effect of pipelining, of operand forwarding and of dynamic branch prediction can each be measured rather than asserted:
+This repository contains a five-stage pipelined RISC-V processor implemented in Verilog. The design is built in **four configurations** so the individual effects of pipelining, operand forwarding, and dynamic branch prediction can be measured directly rather than assumed:
 
 | Configuration | Parameters | Purpose |
 |---|---|---|
@@ -12,7 +12,7 @@ A five-stage pipelined RISC-V processor in Verilog, built in **four configuratio
 | Pipelined, forwarding | `FORWARD_EN=1, PREDICTOR=0` | adds the bypass network |
 | Pipelined, fwd + predictor | `FORWARD_EN=1, PREDICTOR=1` | adds a 64-entry 2-bit branch history table |
 
-The three pipelined configurations are built from **identical RTL** and differ only by parameters, and each step adds exactly one feature, so every comparison isolates that feature:
+The three pipelined configurations are built from the **same RTL** and differ only by parameter settings. Each step adds a single feature, so every comparison isolates the effect of that change:
 
 ```
 stall  --[+ forwarding]-->  fwd  --[+ 2-bit predictor]-->  pred
@@ -24,7 +24,7 @@ stall  --[+ forwarding]-->  fwd  --[+ 2-bit predictor]-->  pred
 
 ## Pipeline Architecture
 
-The processor uses a classic five-stage pipeline. Each instruction passes through five stages, with pipeline registers carrying the required data and control signals between stages.
+The processor follows a classic five-stage pipeline. Each instruction advances through five stages, with pipeline registers carrying the required data and control signals between stages.
 
 ```mermaid
 flowchart LR
@@ -46,11 +46,11 @@ flowchart LR
 | **MEM – Memory Access** | Performs memory reads for LW and memory writes for SW. |
 | **WB – Write Back** | Writes the final result into the destination register. |
 
-Pipeline registers preserve instruction information between consecutive stages, allowing multiple instructions to execute simultaneously.
+Pipeline registers preserve instruction metadata between consecutive stages, allowing multiple instructions to execute in flight simultaneously.
 
 ## Data Hazards and Pipeline Control
 
-A data hazard occurs when an instruction requires a register value that an earlier instruction has not yet produced. This processor implements different mechanisms to handle data and control hazards.
+A data hazard occurs when an instruction depends on a register value that an earlier instruction has not yet produced. The implementation includes several mechanisms to manage both data hazards and control hazards.
 
 ### Hazard Handling Techniques
 
@@ -69,31 +69,31 @@ A data hazard occurs when an instruction requires a register value that an earli
 - **Forwarding:** Uses bypass paths to reduce unnecessary stalls.
 - **Forwarding + Branch Prediction:** Combines forwarding with dynamic branch prediction to reduce control-hazard penalties.
 
-These configurations help demonstrate how different hazard-handling techniques affect CPI, IPC and overall processor performance.
+Together, these configurations illustrate how different hazard-handling strategies affect CPI, IPC, and overall processor performance.
 
 ---
 
 ## Quick start
 
-Install the toolchain (one time):
+Set up the required toolchain once:
 
 ```bash
 brew install icarus-verilog yosys && brew install --cask gtkwave
 ```
 
-Run the entire regression, benchmark sweep and report-table generation:
+Run the full regression, benchmark sweep, and report-table generation:
 
 ```bash
 ./sim/run_all.sh
 ```
 
-Run synthesis (area and logic depth):
+Run synthesis to evaluate area and logic depth:
 
 ```bash
 ./sim/synth.sh
 ```
 
-Run the FPGA characterisation — needs Vivado, so Windows or Linux (see [fpga/README.md](fpga/README.md)):
+Run the FPGA characterization flow. This requires Vivado, so it is intended for Windows or Linux systems (see [fpga/README.md](fpga/README.md)):
 
 ```bash
 vivado -mode batch -source fpga/run_vivado.tcl
@@ -103,7 +103,7 @@ vivado -mode batch -source fpga/run_vivado.tcl
 python3 tools/fpga_table.py
 ```
 
-Run one program on one configuration, with a pipeline trace (`single` | `stall` | `fwd` | `pred`):
+Run a single program on one configuration with a pipeline trace (`single` | `stall` | `fwd` | `pred`):
 
 ```bash
 ./sim/run.sh pred array_sum +trace
@@ -120,15 +120,15 @@ gtkwave results/array_sum.fwd.vcd
 ## What `run_all.sh` checks
 
 1. Assembles every program in `programs/`
-2. Builds all three configurations plus the unit tests
+2. Builds all three pipelined configurations along with the unit tests
 3. **Unit tests** — ALU and register file
-4. **Directed hazard test** — 34 assertions covering every hazard class, run on all four configurations
-5. **Benchmarks** — 7 programs x 4 configurations
-6. **Golden-model check** — the architectural signature (x1–x31 and dmem[0–31]) of each pipelined run must match the single-cycle run byte for byte. This is what actually proves the pipeline correct; counting cycles only proves it is fast.
+4. **Directed hazard test** — 34 assertions covering each hazard class, run across all four configurations
+5. **Benchmarks** — 7 programs × 4 configurations
+6. **Golden-model check** — the architectural state (x1–x31 and dmem[0–31]) of each pipelined run must match the single-cycle run exactly, byte for byte. This is what demonstrates correctness; cycle counts alone only show speed.
 7. Generates `results/perf.csv` and `results/perf.md`
-8. Generates pipeline traces and VCD waveforms for the report
+8. Produces pipeline traces and VCD waveforms for the report
 
-Exit status is non-zero if anything fails, so it works as a pre-submission gate.
+The script exits with a non-zero status if any check fails, making it a reliable pre-submission gate.
 
 ---
 
@@ -211,7 +211,7 @@ Every RTL file carries an `Owner:` line in its header comment. Per-member notes 
 
 ## Headline results
 
-Measured over 7 benchmarks, 523 instructions total:
+The design was evaluated across 7 benchmark programs, for a total of 523 instructions:
 
 | Configuration | Cycles | CPI | IPC | Cycles saved | Net speedup vs single-cycle |
 |---|---|---|---|---|---|
@@ -220,11 +220,11 @@ Measured over 7 benchmarks, 523 instructions total:
 | Pipelined, forwarding | 847 | 1.620 | 0.617 | 357 (1.42x) | 1.01x |
 | Pipelined, fwd + predictor | 651 | 1.245 | 0.803 | 196 (1.30x) | **1.32x** |
 
-The last column is the central result, and it is worth reading down: **the naive pipeline is slower than the single-cycle core**, forwarding brings it to break-even, and the predictor makes it a genuine win. Pipelining on its own is not a performance win — pipelining plus hazard mitigation is. (Net speedup multiplies the cycle ratio by the 1.64x clock-period ratio from synthesis; see §7.5 of the report.)
+The final column captures the central result: **the naive pipeline is slower than the single-cycle core**, forwarding brings it to break-even, and the predictor turns it into a genuine performance win. Pipelining alone is not a performance advantage; the gain emerges only when hazards are mitigated effectively. (The net speedup multiplies the cycle ratio by the 1.64× clock-period ratio from synthesis; see §7.5 of the report.)
 
-Together the two features remove **553 of the 681** hazard cycles the naive pipeline paid — 81% of the overhead — for +1359 gates and +136 flip-flops.
+Together, the two mitigation features remove **553 of the 681** hazard cycles incurred by the naive pipeline — 81% of the overhead — for an increase of +1359 gates and +136 flip-flops.
 
-**Branch prediction accuracy rises from 11.7% to 93.3%**, removing 98 of 106 mispredictions. The predictor misses exactly twice per loop on every benchmark: once on entry (counter starts weakly not-taken) and once on exit.
+**Branch prediction accuracy improves from 11.7% to 93.3%**, eliminating 98 of 106 mispredictions. The predictor misses exactly twice per loop in every benchmark: once on entry (when the counter starts weakly not-taken) and once on exit.
 
 Steady-state CPI on the longest benchmark (`vecsum64`, 260 instructions) is **1.277**, which is the figure to quote for sustained performance. `fib` reaches **1.076** — within 7% of the ideal for a scalar pipeline.
 
