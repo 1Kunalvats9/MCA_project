@@ -45,6 +45,17 @@ Run synthesis (area and logic depth):
 ./sim/synth.sh
 ```
 
+Run the FPGA characterisation — needs Vivado, so Windows or Linux
+(see [fpga/README.md](fpga/README.md)):
+
+```bash
+vivado -mode batch -source fpga/run_vivado.tcl
+```
+
+```bash
+python3 tools/fpga_table.py
+```
+
 Run one program on one configuration, with a pipeline trace
 (`single` | `stall` | `fwd` | `pred`):
 
@@ -124,10 +135,15 @@ tools/
   asm.py               assembler for the 7-instruction subset
   perf_table.py        perf.csv -> report tables
   synth_table.py       Yosys logs -> report tables
+  fpga_table.py        Vivado results -> report tables
 sim/
   run.sh               one config, one program
   run_all.sh           full regression + sweep
   synth.sh             Yosys area and depth
+fpga/
+  run_vivado.tcl       one-command FPGA characterisation, all 4 configs
+  wrappers/            one wrapper per configuration, identical ports
+  README.md            how to run it, options, troubleshooting
 docs/                  report and per-member notes
 results/               all generated output (CSV, markdown, traces, VCDs)
 ```
@@ -179,6 +195,16 @@ exit.
 Steady-state CPI on the longest benchmark (`vecsum64`, 260 instructions)
 is **1.277**, which is the figure to quote for sustained performance.
 `fib` reaches **1.076** — within 7% of the ideal for a scalar pipeline.
+
+### Still to measure
+
+FPGA utilisation and Fmax. Vivado does not run on macOS, so this needs a
+team member on Windows or Linux; the flow is written and reduced to two
+commands (above), takes about an hour unattended, and needs no board.
+It fills §7.8 of the report, replaces the one estimated figure in the
+headline speedup, and settles whether the predictor stays free in clock
+period once Vivado maps the adders onto carry chains. See
+[docs/VIVADO.md](docs/VIVADO.md).
 
 Full tables: `results/perf.md` and `results/synth_summary.md`.
 Discussion, including why the net speedup over the single-cycle core is

@@ -1,8 +1,8 @@
 ### Yosys synthesis: fwd (top = riscv_pipeline)
 
 === riscv_pipeline ===
-     5111 wires
-      311 public wires
+     5113 wires
+      313 public wires
      6679 cells
       121   $_ANDNOT_
       994   $_AND_
@@ -22,8 +22,8 @@
         1   dmem
         1   imem
 === riscv_pipeline ===
-     4684 wires
-      311 public wires
+     4686 wires
+      313 public wires
      6216 cells
       956   $_AND_
         1   $_DFF_P_

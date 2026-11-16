@@ -51,7 +51,7 @@ done
 hr; say "STEP 2 - compiling"; hr
 for cfg in "${CONFIGS[@]}"; do
   for tb in tb_core tb_hazards; do
-    if iverilog -g2005 -Wall -Wno-timescale -I rtl/common -s "$tb" $(defs_for "$cfg") \
+    if iverilog -g2005 -Wall -Wimplicit -Wportbind -Wno-timescale -I rtl/common -s "$tb" $(defs_for "$cfg") \
          -o "build/${tb}_${cfg}.out" "tb/${tb}.v" "${RTL[@]}" \
          >> results/run.log 2>&1; then
       say "  ok   ${tb} [${cfg}]"
@@ -62,7 +62,7 @@ for cfg in "${CONFIGS[@]}"; do
   done
 done
 for tb in tb_alu tb_regfile; do
-  if iverilog -g2005 -Wall -Wno-timescale -I rtl/common -s "$tb" -o "build/${tb}.out" \
+  if iverilog -g2005 -Wall -Wimplicit -Wportbind -Wno-timescale -I rtl/common -s "$tb" -o "build/${tb}.out" \
        "tb/${tb}.v" rtl/common/*.v >> results/run.log 2>&1; then
     say "  ok   ${tb}"
   else

@@ -673,9 +673,64 @@ T_pipe    ~  max(56+M, 12, 70, 2+M, 1)
    structural comparisons.
 2. **Ripple-carry adder.** Vivado maps the adder onto dedicated
    carry-chain primitives, which changes §7.3 and §7.4 substantially.
-3. **FPGA figures still to be collected.** `docs/VIVADO.md` has the steps.
-   Note that `dmem` has an asynchronous read and will map to distributed
-   LUT RAM rather than block RAM.
+3. **FPGA figures still to be collected.** §7.8 below is the slot for
+   them, and the flow that fills it is written and ready to run.
+
+### 7.8 FPGA results (Vivado)
+
+**Status: not yet measured.** Vivado does not run on macOS, so this
+section is to be filled in by a team member on Windows or Linux. The
+entire flow is written, validated and reduced to two commands:
+
+```bash
+vivado -mode batch -source fpga/run_vivado.tcl
+python3 tools/fpga_table.py
+```
+
+The first characterises all four configurations — synthesis plus full
+place and route — and the second writes `results/fpga_summary.md`,
+formatted to drop straight into this section. Budget about an hour,
+unattended. No board is required. Methodology, interpretation and a GUI
+alternative are in `docs/VIVADO.md`; mechanics and troubleshooting in
+`fpga/README.md`.
+
+The table it produces:
+
+| Configuration | LUTs | FFs | LUTRAM | BRAM | Carry | WNS (ns) | Fmax (MHz) |
+|---|---|---|---|---|---|---|---|
+| Single-cycle | | | | | | | |
+| Pipelined, stall-only | | | | | | | |
+| Pipelined, forwarding | | | | | | | |
+| Pipelined, fwd + predictor | | | | | | | |
+
+Two specific things this run settles, beyond filling in a table.
+
+**(a) It replaces the only estimated number in this report.** The net
+speedup in §7.5 multiplies measured cycle counts by a clock-period ratio
+of 1.64x that is *estimated* from Yosys gate levels. Gate levels are not
+nanoseconds (§7.7). `tools/fpga_table.py` recomputes the whole of §7.5
+using measured Fmax.
+
+**(b) It tests the prediction in §7.4, which may well be overturned.**
+§7.4 concludes the predictor is free in clock period because IF at 56
+gate levels stays under EX at 70. That holds only because Yosys builds
+the ALU adder as a ripple carry. Vivado maps adders onto CARRY4
+primitives, so EX will shrink and **IF may overtake it**. Comparing the
+Fmax of `fwd` against `pred` decides it:
+
+| Outcome | Reading |
+|---|---|
+| Fmax roughly equal | §7.4 holds; the 1.30x cycle gain is a real 1.30x |
+| `pred` lower, net still above 1 | IF is now critical; the predictor costs period but still wins. Moving the target adder into its own stage would recover the rest |
+| net below 1 | The period cost exceeds the cycle gain — a genuine negative result, and the fix is restructuring rather than dropping the predictor |
+
+The script works out which case applies and writes the verdict, with a
+pointer to the timing-path report to confirm whether the critical path
+really does now end in fetch.
+
+This section is deliberately written to be **confirmed or overturned** by
+the measurement. Either outcome is a result; leaving the prediction
+untested would be the weak option.
 
 ---
 
@@ -811,16 +866,24 @@ exactly what §6.4(e) predicts: 5 cycles per 4 instructions, CPI 1.25.
 
 ```bash
 ./sim/run_all.sh     # §5, §6, §8  -> results/perf.md, results/trace_*.txt
-./sim/synth.sh       # §7          -> results/synth_summary.md
+./sim/synth.sh       # §7.1-§7.7   -> results/synth_summary.md
 ```
 
-Both scripts return a non-zero exit status if any check fails.
+Both return a non-zero exit status if any check fails.
+
+For §7.8, on a machine with Vivado (Windows or Linux):
+
+```bash
+vivado -mode batch -source fpga/run_vivado.tcl
+python3 tools/fpga_table.py
+```
 
 | Section | Generated artefact |
 |---|---|
 | §5.2, §5.3, §5.4 | `results/run.log` |
 | §6 | `results/perf.csv`, `results/perf.md` |
-| §7 | `results/synth_*.txt`, `results/depths.txt`, `results/synth_summary.md` |
+| §7.1–§7.7 | `results/synth_*.txt`, `results/depths.txt`, `results/synth_summary.md` |
+| §7.8 | `results/vivado/fpga.csv`, `results/fpga_summary.md` |
 | §8 | `results/trace_*.txt`, `results/*.vcd` |
 
 To reproduce one configuration on one benchmark with a trace:

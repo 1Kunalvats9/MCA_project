@@ -27,6 +27,28 @@
 // off for the stall-only configuration used in the CPI comparison.  The
 // muxes remain in the datapath but become constant-selected, so synthesis
 // optimises them away and the area figures stay honest.
+//
+//--------------------------------------------------------------------------
+// Why continuous assignments and not always @(*)
+//--------------------------------------------------------------------------
+// This logic was originally an always @(*) block with the FORWARD_EN test
+// inside it.  That is correct for FORWARD_EN = 1, but for FORWARD_EN = 0
+// the block constant-folds to two literal assignments with no signals on
+// any right-hand side.  An always @(*) with nothing to be sensitive to
+// NEVER TRIGGERS, so fwd_a and fwd_b stayed X for the entire simulation.
+//
+// The stall-only configuration still produced correct results, but only
+// by accident: a case statement with an X selector matches no explicit
+// item and falls through to `default`, which happened to be the right
+// answer (use the register file value).  Every test passed, so nothing
+// drew attention to it until iverilog's -Wimplicit/-Wall was enabled and
+// reported "@* found no sensitivities so it will never trigger".
+//
+// Continuous assignments have no sensitivity list to be empty, so both
+// outputs are properly driven to FWD_REG in that configuration instead of
+// being left undefined.  Synthesis was never affected - Yosys and Vivado
+// both constant-fold the parameter - so this changes simulation hygiene,
+// not hardware, and the measured numbers are unchanged.
 //==========================================================================
 `include "defines.vh"
 
@@ -47,33 +69,33 @@ module forwarding_unit #(
     input  wire                  wb_reg_write,
     input  wire [4:0]            wb_rd_addr,
 
-    output reg  [1:0]            fwd_a,
-    output reg  [1:0]            fwd_b
+    output wire [1:0]            fwd_a,
+    output wire [1:0]            fwd_b
 );
 
     wire mem_can_fwd = mem_valid & mem_reg_write & (mem_rd_addr != 5'd0);
     wire wb_can_fwd  = wb_valid  & wb_reg_write  & (wb_rd_addr  != 5'd0);
 
-    always @(*) begin
-        // ---- operand A (rs1) ----
-        if (!FORWARD_EN)
-            fwd_a = `FWD_REG;
-        else if (mem_can_fwd && (mem_rd_addr == ex_rs1_addr))
-            fwd_a = `FWD_MEM;                 // younger producer wins
-        else if (wb_can_fwd && (wb_rd_addr == ex_rs1_addr))
-            fwd_a = `FWD_WB;
-        else
-            fwd_a = `FWD_REG;
+    // Enable term folded in per path, so that with FORWARD_EN = 0 every
+    // condition is a constant 0 and both selects are a constant FWD_REG.
+    wire en = (FORWARD_EN != 0);
 
-        // ---- operand B (rs2) ----
-        if (!FORWARD_EN)
-            fwd_b = `FWD_REG;
-        else if (mem_can_fwd && (mem_rd_addr == ex_rs2_addr))
-            fwd_b = `FWD_MEM;
-        else if (wb_can_fwd && (wb_rd_addr == ex_rs2_addr))
-            fwd_b = `FWD_WB;
-        else
-            fwd_b = `FWD_REG;
-    end
+    // ---- operand A (rs1) ----
+    wire a_from_mem = en & mem_can_fwd & (mem_rd_addr == ex_rs1_addr);
+    wire a_from_wb  = en & wb_can_fwd  & (wb_rd_addr  == ex_rs1_addr);
+
+    // ---- operand B (rs2) ----
+    wire b_from_mem = en & mem_can_fwd & (mem_rd_addr == ex_rs2_addr);
+    wire b_from_wb  = en & wb_can_fwd  & (wb_rd_addr  == ex_rs2_addr);
+
+    // EX/MEM is tested first: it is the younger producer and its write
+    // happens later in program order.
+    assign fwd_a = a_from_mem ? `FWD_MEM :
+                   a_from_wb  ? `FWD_WB  :
+                                `FWD_REG;
+
+    assign fwd_b = b_from_mem ? `FWD_MEM :
+                   b_from_wb  ? `FWD_WB  :
+                                `FWD_REG;
 
 endmodule

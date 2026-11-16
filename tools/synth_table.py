@@ -228,9 +228,24 @@ def main():
                            f"(same stages) | "
                            f"**{agg['stall']/agg['fwd']:.2f}x** |")
             if 'fwd' in agg and 'pred' in agg and agg['pred']:
-                out.append(f"| Forwarding vs forwarding+predictor | "
-                           f"{agg['fwd']/agg['pred']:.3f}x | see note | "
-                           f"**{agg['fwd']/agg['pred']:.2f}x** cycles |")
+                # The predictor's clock ratio is measured, not assumed: it
+                # deepens IF, so it is 1.00x only while IF stays under the
+                # deepest stage.  Computed here rather than asserted.
+                d_ifp = mod_depth.get('pc_if_pred')
+                d_deep = max(v for v in sv0 if v is not None) \
+                    if 'sv0' in dir() else None
+                deep_wo = max(mod_depth.get(x) for x in STAGES)
+                deep_w = max([mod_depth.get(x) for x in STAGES_PRED])
+                if deep_w and deep_wo:
+                    pclk = deep_wo / deep_w
+                    note = ("1.00x (IF deepens to %d but stays under the "
+                            "%d-level EX stage)" % (d_ifp, deep_wo)) \
+                        if deep_w == deep_wo else \
+                        ("%.2fx (IF at %d is now the critical stage)"
+                         % (pclk, d_ifp))
+                    out.append(f"| Forwarding vs forwarding+predictor | "
+                               f"{agg['fwd']/agg['pred']:.3f}x | {note} | "
+                               f"**{agg['fwd']/agg['pred']*pclk:.2f}x** |")
                 out.append("")
                 d0 = mod_depth.get('pc_if')
                 d1 = mod_depth.get('pc_if_pred')

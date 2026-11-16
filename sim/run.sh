@@ -34,7 +34,7 @@ esac
 python3 tools/asm.py "programs/${PROG}.s" > /dev/null
 
 # ---- compile ------------------------------------------------------------
-iverilog -g2005 -Wall -Wno-timescale -I rtl/common -s tb_core \
+iverilog -g2005 -Wall -Wimplicit -Wportbind -Wno-timescale -I rtl/common -s tb_core \
   "${DEFS[@]}" \
   -o "build/tb_core_${CFG}.out" \
   tb/tb_core.v \

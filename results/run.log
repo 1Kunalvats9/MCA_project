@@ -46,9 +46,7 @@ STEP 2 - compiling
 ------------------------------------------------------------
   ok   tb_core [single]
   ok   tb_hazards [single]
-rtl/pipelined/forwarding_unit.v:57: warning: @* found no sensitivities so it will never trigger.
   ok   tb_core [stall]
-rtl/pipelined/forwarding_unit.v:57: warning: @* found no sensitivities so it will never trigger.
   ok   tb_hazards [stall]
   ok   tb_core [fwd]
   ok   tb_hazards [fwd]

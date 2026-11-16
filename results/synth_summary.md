@@ -7,18 +7,18 @@ Memories are blackboxed: on an FPGA the instruction and data memories map to blo
 | Configuration | Total cells | Flip-flops | Multiplexers | Whole-core depth (gate levels) |
 |---|---|---|---|---|
 | Single-cycle | 4431 | 1056 | 1891 | 78 |
-| Pipelined (stall only) | 5928 | 1469 | 1519 | 68 |
+| Pipelined (stall only) | 5909 | 1469 | 1534 | 68 |
 | Pipelined (forwarding) | 6216 | 1469 | 1563 | 77 |
-| Pipelined (fwd + 2-bit predictor) | 7287 | 1605 | 1638 | 79 |
+| Pipelined (fwd + 2-bit predictor) | 7325 | 1605 | 1630 | 79 |
 
 ## What each feature costs
 
 | Change | Extra cells | Extra flip-flops |
 |---|---|---|
-| Single-cycle -> pipelined (the 4 pipeline registers and hazard unit) | +1497 | +413 |
-| Adding the forwarding network | +288 | +0 |
-| Adding the 2-bit branch predictor | +1071 | +136 |
-| Single-cycle -> fully featured pipeline (total) | +2856 | +549 |
+| Single-cycle -> pipelined (the 4 pipeline registers and hazard unit) | +1478 | +413 |
+| Adding the forwarding network | +307 | +0 |
+| Adding the 2-bit branch predictor | +1109 | +136 |
+| Single-cycle -> fully featured pipeline (total) | +2894 | +549 |
 
 ## Per-stage combinational depth
 
@@ -60,7 +60,7 @@ Using T_single / T_pipe = 1.64 and the aggregate cycle counts from results/perf.
 |---|---|---|---|
 | Single-cycle vs pipelined (pred) | 0.803x | 1.64x | **1.32x** |
 | Pipelined stall-only vs forwarding | 1.421x | 1.00x (same stages) | **1.42x** |
-| Forwarding vs forwarding+predictor | 1.301x | see note | **1.30x** cycles |
+| Forwarding vs forwarding+predictor | 1.301x | 1.00x (IF deepens to 56 but stays under the 70-level EX stage) | **1.30x** |
 
 The predictor adds an immediate decoder and a target adder to IF, taking that stage from 30 to 56 gate levels. That is still below the EX stage at 70, so the critical path does not move and the clock ratio is unchanged: for this design the predictor's cycle saving is a genuine net win.
 

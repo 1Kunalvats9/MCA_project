@@ -96,19 +96,21 @@ module dmem #(
     assign rdata = re ? mem[word_addr] : {`XLEN{1'b0}};
 
     //----------------------------------------------------------------------
-    // Verification aid: dump the first N words so the testbench can
-    // compare the single-cycle and pipelined cores word for word.
+    // Note on inspecting memory from a testbench
+    //
+    // There is deliberately no debug task or peek function here.  Earlier
+    // versions had both, carrying a $display, and neither was ever used:
+    // the testbenches read this array hierarchically instead
+    // (dut.u_mem.u_dmem.mem[i] in the pipelined cores,
+    // dut.u_dmem.mem[i] in the single-cycle core), which is what
+    // tb_core.v's signature dump and tb_hazards.v's check_mem task do.
+    //
+    // They were removed because a task containing $display sits inside a
+    // module that real FPGA synthesis has to read, and dead
+    // simulation-only code in a synthesised module is an avoidable risk
+    // for the Vivado flow.  Everything above this point is synthesisable:
+    // the one remaining initial block is a $readmemh memory
+    // initialisation, which Vivado supports for RAM inference.
     //----------------------------------------------------------------------
-    task dump_words (input integer n);
-        integer k;
-        begin
-            for (k = 0; k < n; k = k + 1)
-                $display("  dmem[%0d] = %0d (0x%08x)", k, mem[k], mem[k]);
-        end
-    endtask
-
-    function [`XLEN-1:0] peek (input integer word_index);
-        peek = mem[word_index];
-    endfunction
 
 endmodule
