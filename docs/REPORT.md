@@ -748,23 +748,23 @@ instructions complete in 20 cycles rather than 80.
 
 ```
 cyc | IF pc | ID        | EX        | MEM       | WB        | event
-  4 |     8 | lw        | addi      |   --      |   --      |
-  5 |    12 | add       | lw        | addi      |   --      | STALL (bubble into EX)
-  6 |    12 | add       |   --      | lw        | addi      |
-  7 |    16 | lw        | add       |   --      | lw        |
+  3 |     8 | lw        | addi      |   --      |   --      |
+  4 |    12 | add       | lw        | addi      |   --      | STALL (bubble into EX)
+  5 |    12 | add       |   --      | lw        | addi      |
+  6 |    16 | lw        | add       |   --      | lw        |
 ```
 
-At cycle 5 the `add` needs the `lw` result; the hazard unit holds IF and
-IF/ID (the PC stays at 12) and injects a bubble, visible as `--` in EX at
-cycle 6. The `add` then proceeds and receives the value by MEM/WB → EX
-forwarding.
+At cycle 4 the `add` needs the `lw` result; the hazard unit holds IF and
+IF/ID (the PC stays at 12 across cycles 4 and 5) and injects a bubble,
+visible as `--` in EX at cycle 5. The `add` then proceeds and receives the
+value by MEM/WB → EX forwarding.
 
 ### 8.3 Branch flush (`branch_mix`, forwarding)
 
 ```
 cyc | IF pc | ID        | EX        | MEM       | WB        | event
   9 |    32 | bne       | addi      | beq       | addi      |
- 10 |    36 | sw        | bne       | addi      | beq       | BRANCH TAKEN -> flush IF/ID and ID/EX
+ 10 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
  11 |    16 |   --      |   --      | bne       | addi      |
  12 |    20 | addi      |   --      |   --      | bne       |
 ```
@@ -773,6 +773,11 @@ At cycle 10 the `bne` is in EX and resolves taken. The `sw` in IF/ID and
 the instruction entering ID/EX are both discarded — the two `--` entries
 at cycle 11 — and the PC jumps from 36 back to the loop target at 16.
 Exactly the 2-cycle penalty predicted in §4.5.
+
+The event reads MISPREDICT rather than "branch taken" because the flush is
+driven by a failed prediction (§4.6). In this configuration the policy is
+static not-taken, so every taken branch is a mispredict and the two are
+the same event.
 
 ### 8.4 Forwarding versus stalling (`dep_chain`)
 
@@ -783,51 +788,63 @@ same 16 instructions.
 ### 8.5 The predictor eliminating the branch penalty (`array_sum`)
 
 The clearest single piece of evidence in the project: the same loop, the
-same four instructions, with and without the predictor.
+same four instructions, with and without the predictor. Both excerpts are
+**steady-state** iterations, verbatim from the generated traces.
 
 **Static not-taken** — 7 cycles per iteration
 (`results/trace_array_sum_fwd.txt`):
 
 ```
 cyc | IF pc | ID        | EX        | MEM       | WB        | event
+  9 |    28 | bne       | addi      | add       |   --      |
+ 10 |    32 | sw        | bne       | addi      | add       | MISPREDICT -> flush IF/ID and ID/EX
+ 11 |    12 |   --      |   --      | bne       | addi      |
+ 12 |    16 | lw        |   --      |   --      | bne       |
+ 13 |    20 | add       | lw        |   --      |   --      | STALL (bubble into EX)
+ 14 |    20 | add       |   --      | lw        |   --      |
+ 15 |    24 | addi      | add       |   --      | lw        |
  16 |    28 | bne       | addi      | add       |   --      |
  17 |    32 | sw        | bne       | addi      | add       | MISPREDICT -> flush IF/ID and ID/EX
- 18 |    12 |   --      |   --      | bne       | addi      |
- 19 |    16 | lw        |   --      |   --      | bne       |
- 20 |    20 | add       | lw        |   --      |   --      | STALL (bubble into EX)
- 21 |    20 | add       |   --      | lw        |   --      |
- 22 |    24 | addi      | add       |   --      | lw        |
- 23 |    28 | bne       | addi      | add       |   --      |   <- next iteration, 7 cycles later
 ```
 
-IF fetches PC 32 (the `sw` after the loop) every single iteration, and
-every single iteration it is thrown away. Cycles 18 and 19 show the two
-dead slots.
+IF fetches PC 32 — the `sw` after the loop — on every iteration, and on
+every iteration it is thrown away. Cycles 11 and 12 are the two dead
+slots. Successive MISPREDICT events are 7 cycles apart (10 → 17).
 
 **With the 2-bit predictor** — 5 cycles per iteration
 (`results/trace_array_sum_pred.txt`):
 
 ```
 cyc | IF pc | ID        | EX        | MEM       | WB        | event
+ 15 |    24 | addi      | add       |   --      | lw        |
  16 |    12 | bne       | addi      | add       |   --      |
  17 |    16 | lw        | bne       | addi      | add       |
  18 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX)
  19 |    20 | add       |   --      | lw        | bne       |
  20 |    24 | addi      | add       |   --      | lw        |
- 21 |    12 | bne       | addi      | add       |   --      |   <- next iteration, 5 cycles later
+ 21 |    12 | bne       | addi      | add       |   --      |
 ```
 
-Two things to point at:
+Three things to point at:
 
-1. **There is no MISPREDICT event and there are no dead slots.** The
-   pipeline stays full across the backward branch.
-2. **IF never fetches PC 32 at all.** At cycle 20 the PC goes straight
-   from 24 to 12, the loop target — the predictor redirected fetch two
+1. **No MISPREDICT event and no dead slots.** The pipeline stays full
+   across the backward branch.
+2. **IF never fetches PC 32 at all.** Between cycles 15 and 16 the PC goes
+   straight from 24 to 12, the loop target — fetch was redirected two
    cycles before EX confirmed the branch. The wrong-path instruction is
-   never fetched, rather than being fetched and discarded.
+   never fetched, rather than fetched and discarded.
+3. **The iteration is 5 cycles**, not 7 (`bne` enters ID at cycle 16 and
+   again at 21). The only remaining bubble is the load-use stall at cycle
+   18, exactly as §6.4(e) predicts: 5 cycles per 4 instructions, CPI 1.25.
 
-The only remaining bubble is the load-use stall at cycle 18, which is
-exactly what §6.4(e) predicts: 5 cycles per 4 instructions, CPI 1.25.
+**The first iteration still mispredicts.** The excerpt above is steady
+state; earlier in the same trace, at cycle 10, there is a MISPREDICT with
+two dead slots, identical to the static case. That is the cold counter:
+it resets to `01`, weakly not taken, so the loop's first branch is
+predicted wrongly and the counter then moves to `10`. Counting MISPREDICT
+events across the whole trace gives **15 for static and 2 for the
+predictor** — loop entry and loop exit, and nothing else, which is the
+behaviour §6.3 describes.
 
 ---
 
