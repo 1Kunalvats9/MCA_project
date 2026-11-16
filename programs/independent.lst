@@ -1,0 +1,19 @@
+# listing for programs/independent.s
+# 16 instructions, 0 data words
+#   pc    encoding   source
+     0  00100093   addi x1,  x0, 1
+     4  00200113   addi x2,  x0, 2
+     8  00300193   addi x3,  x0, 3
+    12  00400213   addi x4,  x0, 4
+    16  00500293   addi x5,  x0, 5
+    20  00600313   addi x6,  x0, 6
+    24  00700393   addi x7,  x0, 7
+    28  00800413   addi x8,  x0, 8
+    32  00900493   addi x9,  x0, 9
+    36  00a00513   addi x10, x0, 10
+    40  00b00593   addi x11, x0, 11
+    44  00c00613   addi x12, x0, 12
+    48  00d00693   addi x13, x0, 13
+    52  00e00713   addi x14, x0, 14
+    56  00f00793   addi x15, x0, 15
+    60  01000813   addi x16, x0, 16

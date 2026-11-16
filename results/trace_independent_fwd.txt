@@ -1,0 +1,38 @@
+loaded 16 instruction words from programs/independent.imem.hex
+VCD info: dumpfile results/independent.fwd.vcd opened for output.
+
+Pipeline occupancy trace: independent [fwd]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | addi      | addi      |   --      |   --      | 
+  4 |    12 | addi      | addi      | addi      |   --      | 
+  5 |    16 | addi      | addi      | addi      | addi      | 
+  6 |    20 | addi      | addi      | addi      | addi      | 
+  7 |    24 | addi      | addi      | addi      | addi      | 
+  8 |    28 | addi      | addi      | addi      | addi      | 
+  9 |    32 | addi      | addi      | addi      | addi      | 
+ 10 |    36 | addi      | addi      | addi      | addi      | 
+ 11 |    40 | addi      | addi      | addi      | addi      | 
+ 12 |    44 | addi      | addi      | addi      | addi      | 
+ 13 |    48 | addi      | addi      | addi      | addi      | 
+ 14 |    52 | addi      | addi      | addi      | addi      | 
+ 15 |    56 | addi      | addi      | addi      | addi      | 
+ 16 |    60 | addi      | addi      | addi      | addi      | 
+ 17 |    64 | addi      | addi      | addi      | addi      | 
+ 18 |    64 |   --      | addi      | addi      | addi      | 
+ 19 |    64 |   --      |   --      | addi      | addi      | 
+ 20 |    64 |   --      |   --      |   --      | addi      | 
+
+---- independent / fwd ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 3 4 5 6 7 8
+tb/tb_core.v:215: $finish called at 225000 (1ps)

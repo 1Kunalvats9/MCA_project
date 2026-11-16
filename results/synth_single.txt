@@ -1,0 +1,40 @@
+### Yosys synthesis: single (top = riscv_single_cycle)
+
+=== riscv_single_cycle ===
+     2938 wires
+       85 public wires
+     4094 cells
+       14   $_ANDNOT_
+      274   $_AND_
+     2026   $_MUX_
+      304   $_NAND_
+       61   $_NOR_
+       13   $_NOT_
+       56   $_ORNOT_
+      108   $_OR_
+     1024   $_SDFFCE_PN0P_
+       30   $_SDFFE_PP0N_
+        2   $_SDFFE_PP0P_
+      108   $_XNOR_
+       67   $_XOR_
+        1   dmem
+        1   imem
+=== riscv_single_cycle ===
+     3276 wires
+       85 public wires
+     4431 cells
+      386   $_AND_
+     1891   $_MUX_
+      570   $_NAND_
+       70   $_NOR_
+       88   $_NOT_
+      182   $_OR_
+     1024   $_SDFFCE_PN0P_
+       30   $_SDFFE_PP0N_
+        2   $_SDFFE_PP0P_
+       99   $_XNOR_
+       82   $_XOR_
+        1   dmem
+        1   imem
+
+Longest topological path in riscv_single_cycle (length=78):

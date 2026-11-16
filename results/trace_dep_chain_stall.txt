@@ -1,0 +1,68 @@
+loaded 16 instruction words from programs/dep_chain.imem.hex
+VCD info: dumpfile results/dep_chain.stall.vcd opened for output.
+
+Pipeline occupancy trace: dep_chain [stall]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | add       | addi      |   --      |   --      | STALL (bubble into EX) 
+  4 |     8 | add       |   --      | addi      |   --      | STALL (bubble into EX) 
+  5 |     8 | add       |   --      |   --      | addi      | 
+  6 |    12 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+  7 |    12 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+  8 |    12 | add       |   --      |   --      | add       | 
+  9 |    16 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 10 |    16 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 11 |    16 | add       |   --      |   --      | add       | 
+ 12 |    20 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 13 |    20 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 14 |    20 | add       |   --      |   --      | add       | 
+ 15 |    24 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 16 |    24 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 17 |    24 | add       |   --      |   --      | add       | 
+ 18 |    28 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 19 |    28 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 20 |    28 | add       |   --      |   --      | add       | 
+ 21 |    32 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 22 |    32 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 23 |    32 | add       |   --      |   --      | add       | 
+ 24 |    36 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 25 |    36 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 26 |    36 | add       |   --      |   --      | add       | 
+ 27 |    40 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 28 |    40 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 29 |    40 | add       |   --      |   --      | add       | 
+ 30 |    44 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 31 |    44 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 32 |    44 | add       |   --      |   --      | add       | 
+ 33 |    48 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 34 |    48 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 35 |    48 | add       |   --      |   --      | add       | 
+ 36 |    52 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 37 |    52 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 38 |    52 | add       |   --      |   --      | add       | 
+ 39 |    56 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 40 |    56 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 41 |    56 | add       |   --      |   --      | add       | 
+ 42 |    60 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 43 |    60 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 44 |    60 | add       |   --      |   --      | add       | 
+ 45 |    64 | add       | add       |   --      |   --      | STALL (bubble into EX) 
+ 46 |    64 | add       |   --      | add       |   --      | STALL (bubble into EX) 
+ 47 |    64 | add       |   --      |   --      | add       | 
+ 48 |    64 |   --      | add       |   --      |   --      | 
+ 49 |    64 |   --      |   --      | add       |   --      | 
+ 50 |    64 |   --      |   --      |   --      | add       | 
+
+---- dep_chain / stall ----
+  instructions retired : 16
+  clock cycles         : 50
+  stall cycles         : 30
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 3.125000
+  IPC                  : 0.320000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 525000 (1ps)

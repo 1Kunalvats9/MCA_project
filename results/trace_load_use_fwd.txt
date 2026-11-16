@@ -1,0 +1,40 @@
+loaded 13 instruction words from programs/load_use.imem.hex
+loaded 4 data words from programs/load_use.dmem.hex
+VCD info: dumpfile results/load_use.fwd.vcd opened for output.
+
+Pipeline occupancy trace: load_use [fwd]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | lw        | addi      |   --      |   --      | 
+  4 |    12 | add       | lw        | addi      |   --      | STALL (bubble into EX) 
+  5 |    12 | add       |   --      | lw        | addi      | 
+  6 |    16 | lw        | add       |   --      | lw        | 
+  7 |    20 | add       | lw        | add       |   --      | STALL (bubble into EX) 
+  8 |    20 | add       |   --      | lw        | add       | 
+  9 |    24 | lw        | add       |   --      | lw        | 
+ 10 |    28 | add       | lw        | add       |   --      | STALL (bubble into EX) 
+ 11 |    28 | add       |   --      | lw        | add       | 
+ 12 |    32 | lw        | add       |   --      | lw        | 
+ 13 |    36 | add       | lw        | add       |   --      | STALL (bubble into EX) 
+ 14 |    36 | add       |   --      | lw        | add       | 
+ 15 |    40 | sw        | add       |   --      | lw        | 
+ 16 |    44 | sw        | sw        | add       |   --      | 
+ 17 |    48 | sw        | sw        | sw        | add       | 
+ 18 |    52 | sw        | sw        | sw        | sw        | 
+ 19 |    52 |   --      | sw        | sw        | sw        | 
+ 20 |    52 |   --      |   --      | sw        | sw        | 
+ 21 |    52 |   --      |   --      |   --      | sw        | 
+
+---- load_use / fwd ----
+  instructions retired : 13
+  clock cycles         : 21
+  stall cycles         : 4
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.615385
+  IPC                  : 0.619048
+  final x1..x8         : 10 20 20 40 30 60 40 80
+tb/tb_core.v:215: $finish called at 235000 (1ps)

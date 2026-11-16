@@ -1,0 +1,111 @@
+loaded 8 instruction words from programs/array_sum.imem.hex
+loaded 16 data words from programs/array_sum.dmem.hex
+VCD info: dumpfile results/array_sum.pred.vcd opened for output.
+
+Pipeline occupancy trace: array_sum [pred]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | addi      | addi      |   --      |   --      | 
+  4 |    12 | addi      | addi      | addi      |   --      | 
+  5 |    16 | lw        | addi      | addi      | addi      | 
+  6 |    20 | add       | lw        | addi      | addi      | STALL (bubble into EX) 
+  7 |    20 | add       |   --      | lw        | addi      | 
+  8 |    24 | addi      | add       |   --      | lw        | 
+  9 |    28 | bne       | addi      | add       |   --      | 
+ 10 |    32 | sw        | bne       | addi      | add       | MISPREDICT -> flush IF/ID and ID/EX
+ 11 |    12 |   --      |   --      | bne       | addi      | 
+ 12 |    16 | lw        |   --      |   --      | bne       | 
+ 13 |    20 | add       | lw        |   --      |   --      | STALL (bubble into EX) 
+ 14 |    20 | add       |   --      | lw        |   --      | 
+ 15 |    24 | addi      | add       |   --      | lw        | 
+ 16 |    12 | bne       | addi      | add       |   --      | 
+ 17 |    16 | lw        | bne       | addi      | add       | 
+ 18 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 19 |    20 | add       |   --      | lw        | bne       | 
+ 20 |    24 | addi      | add       |   --      | lw        | 
+ 21 |    12 | bne       | addi      | add       |   --      | 
+ 22 |    16 | lw        | bne       | addi      | add       | 
+ 23 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 24 |    20 | add       |   --      | lw        | bne       | 
+ 25 |    24 | addi      | add       |   --      | lw        | 
+ 26 |    12 | bne       | addi      | add       |   --      | 
+ 27 |    16 | lw        | bne       | addi      | add       | 
+ 28 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 29 |    20 | add       |   --      | lw        | bne       | 
+ 30 |    24 | addi      | add       |   --      | lw        | 
+ 31 |    12 | bne       | addi      | add       |   --      | 
+ 32 |    16 | lw        | bne       | addi      | add       | 
+ 33 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 34 |    20 | add       |   --      | lw        | bne       | 
+ 35 |    24 | addi      | add       |   --      | lw        | 
+ 36 |    12 | bne       | addi      | add       |   --      | 
+ 37 |    16 | lw        | bne       | addi      | add       | 
+ 38 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 39 |    20 | add       |   --      | lw        | bne       | 
+ 40 |    24 | addi      | add       |   --      | lw        | 
+ 41 |    12 | bne       | addi      | add       |   --      | 
+ 42 |    16 | lw        | bne       | addi      | add       | 
+ 43 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 44 |    20 | add       |   --      | lw        | bne       | 
+ 45 |    24 | addi      | add       |   --      | lw        | 
+ 46 |    12 | bne       | addi      | add       |   --      | 
+ 47 |    16 | lw        | bne       | addi      | add       | 
+ 48 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 49 |    20 | add       |   --      | lw        | bne       | 
+ 50 |    24 | addi      | add       |   --      | lw        | 
+ 51 |    12 | bne       | addi      | add       |   --      | 
+ 52 |    16 | lw        | bne       | addi      | add       | 
+ 53 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 54 |    20 | add       |   --      | lw        | bne       | 
+ 55 |    24 | addi      | add       |   --      | lw        | 
+ 56 |    12 | bne       | addi      | add       |   --      | 
+ 57 |    16 | lw        | bne       | addi      | add       | 
+ 58 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 59 |    20 | add       |   --      | lw        | bne       | 
+ 60 |    24 | addi      | add       |   --      | lw        | 
+ 61 |    12 | bne       | addi      | add       |   --      | 
+ 62 |    16 | lw        | bne       | addi      | add       | 
+ 63 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 64 |    20 | add       |   --      | lw        | bne       | 
+ 65 |    24 | addi      | add       |   --      | lw        | 
+ 66 |    12 | bne       | addi      | add       |   --      | 
+ 67 |    16 | lw        | bne       | addi      | add       | 
+ 68 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 69 |    20 | add       |   --      | lw        | bne       | 
+ 70 |    24 | addi      | add       |   --      | lw        | 
+ 71 |    12 | bne       | addi      | add       |   --      | 
+ 72 |    16 | lw        | bne       | addi      | add       | 
+ 73 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 74 |    20 | add       |   --      | lw        | bne       | 
+ 75 |    24 | addi      | add       |   --      | lw        | 
+ 76 |    12 | bne       | addi      | add       |   --      | 
+ 77 |    16 | lw        | bne       | addi      | add       | 
+ 78 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 79 |    20 | add       |   --      | lw        | bne       | 
+ 80 |    24 | addi      | add       |   --      | lw        | 
+ 81 |    12 | bne       | addi      | add       |   --      | 
+ 82 |    16 | lw        | bne       | addi      | add       | 
+ 83 |    20 | add       | lw        | bne       | addi      | STALL (bubble into EX) 
+ 84 |    20 | add       |   --      | lw        | bne       | 
+ 85 |    24 | addi      | add       |   --      | lw        | 
+ 86 |    12 | bne       | addi      | add       |   --      | 
+ 87 |    16 | lw        | bne       | addi      | add       | MISPREDICT -> flush IF/ID and ID/EX
+ 88 |    28 |   --      |   --      | bne       | addi      | 
+ 89 |    32 | sw        |   --      |   --      | bne       | 
+ 90 |    32 |   --      | sw        |   --      |   --      | 
+ 91 |    32 |   --      |   --      | sw        |   --      | 
+ 92 |    32 |   --      |   --      |   --      | sw        | 
+
+---- array_sum / pred ----
+  instructions retired : 68
+  clock cycles         : 92
+  stall cycles         : 16
+  branches resolved    : 16  (15 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 87.500000 %
+  CPI                  : 1.352941
+  IPC                  : 0.739130
+  final x1..x8         : 64 136 64 16 0 0 0 0
+tb/tb_core.v:215: $finish called at 945000 (1ps)

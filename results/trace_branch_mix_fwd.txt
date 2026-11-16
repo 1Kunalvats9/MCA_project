@@ -1,0 +1,85 @@
+loaded 9 instruction words from programs/branch_mix.imem.hex
+VCD info: dumpfile results/branch_mix.fwd.vcd opened for output.
+
+Pipeline occupancy trace: branch_mix [fwd]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | addi      | addi      |   --      |   --      | 
+  4 |    12 | addi      | addi      | addi      |   --      | 
+  5 |    16 | addi      | addi      | addi      | addi      | 
+  6 |    20 | addi      | addi      | addi      | addi      | 
+  7 |    24 | beq       | addi      | addi      | addi      | 
+  8 |    28 | addi      | beq       | addi      | addi      | 
+  9 |    32 | bne       | addi      | beq       | addi      | 
+ 10 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 11 |    16 |   --      |   --      | bne       | addi      | 
+ 12 |    20 | addi      |   --      |   --      | bne       | 
+ 13 |    24 | beq       | addi      |   --      |   --      | 
+ 14 |    28 | addi      | beq       | addi      |   --      | 
+ 15 |    32 | bne       | addi      | beq       | addi      | 
+ 16 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 17 |    16 |   --      |   --      | bne       | addi      | 
+ 18 |    20 | addi      |   --      |   --      | bne       | 
+ 19 |    24 | beq       | addi      |   --      |   --      | 
+ 20 |    28 | addi      | beq       | addi      |   --      | 
+ 21 |    32 | bne       | addi      | beq       | addi      | 
+ 22 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 23 |    16 |   --      |   --      | bne       | addi      | 
+ 24 |    20 | addi      |   --      |   --      | bne       | 
+ 25 |    24 | beq       | addi      |   --      |   --      | 
+ 26 |    28 | addi      | beq       | addi      |   --      | 
+ 27 |    32 | bne       | addi      | beq       | addi      | 
+ 28 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 29 |    16 |   --      |   --      | bne       | addi      | 
+ 30 |    20 | addi      |   --      |   --      | bne       | 
+ 31 |    24 | beq       | addi      |   --      |   --      | 
+ 32 |    28 | addi      | beq       | addi      |   --      | 
+ 33 |    32 | bne       | addi      | beq       | addi      | 
+ 34 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 35 |    16 |   --      |   --      | bne       | addi      | 
+ 36 |    20 | addi      |   --      |   --      | bne       | 
+ 37 |    24 | beq       | addi      |   --      |   --      | 
+ 38 |    28 | addi      | beq       | addi      |   --      | 
+ 39 |    32 | bne       | addi      | beq       | addi      | 
+ 40 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 41 |    16 |   --      |   --      | bne       | addi      | 
+ 42 |    20 | addi      |   --      |   --      | bne       | 
+ 43 |    24 | beq       | addi      |   --      |   --      | 
+ 44 |    28 | addi      | beq       | addi      |   --      | 
+ 45 |    32 | bne       | addi      | beq       | addi      | 
+ 46 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 47 |    16 |   --      |   --      | bne       | addi      | 
+ 48 |    20 | addi      |   --      |   --      | bne       | 
+ 49 |    24 | beq       | addi      |   --      |   --      | 
+ 50 |    28 | addi      | beq       | addi      |   --      | 
+ 51 |    32 | bne       | addi      | beq       | addi      | 
+ 52 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 53 |    16 |   --      |   --      | bne       | addi      | 
+ 54 |    20 | addi      |   --      |   --      | bne       | 
+ 55 |    24 | beq       | addi      |   --      |   --      | 
+ 56 |    28 | addi      | beq       | addi      |   --      | 
+ 57 |    32 | bne       | addi      | beq       | addi      | 
+ 58 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 59 |    16 |   --      |   --      | bne       | addi      | 
+ 60 |    20 | addi      |   --      |   --      | bne       | 
+ 61 |    24 | beq       | addi      |   --      |   --      | 
+ 62 |    28 | addi      | beq       | addi      |   --      | 
+ 63 |    32 | bne       | addi      | beq       | addi      | 
+ 64 |    36 | sw        | bne       | addi      | beq       | 
+ 65 |    36 |   --      | sw        | bne       | addi      | 
+ 66 |    36 |   --      |   --      | sw        | bne       | 
+ 67 |    36 |   --      |   --      |   --      | sw        | 
+
+---- branch_mix / fwd ----
+  instructions retired : 45
+  clock cycles         : 67
+  stall cycles         : 0
+  branches resolved    : 20  (9 taken)
+  mispredictions       : 9  (18 flushed slots)
+  prediction accuracy  : 55.000000 %
+  CPI                  : 1.488889
+  IPC                  : 0.671642
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 695000 (1ps)

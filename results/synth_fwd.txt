@@ -1,0 +1,44 @@
+### Yosys synthesis: fwd (top = riscv_pipeline)
+
+=== riscv_pipeline ===
+     5111 wires
+      311 public wires
+     6679 cells
+      121   $_ANDNOT_
+      994   $_AND_
+        1   $_DFF_P_
+     1323   $_MUX_
+     1097   $_NAND_
+      158   $_NOR_
+       16   $_NOT_
+      591   $_ORNOT_
+      646   $_OR_
+     1024   $_SDFFCE_PN0P_
+       65   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      347   $_SDFF_PP0_
+      130   $_XNOR_
+      115   $_XOR_
+        1   dmem
+        1   imem
+=== riscv_pipeline ===
+     4684 wires
+      311 public wires
+     6216 cells
+      956   $_AND_
+        1   $_DFF_P_
+     1563   $_MUX_
+     1238   $_NAND_
+       84   $_NOR_
+       69   $_NOT_
+      583   $_OR_
+     1024   $_SDFFCE_PN0P_
+       65   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      347   $_SDFF_PP0_
+       92   $_XNOR_
+      143   $_XOR_
+        1   dmem
+        1   imem
+
+Longest topological path in riscv_pipeline (length=77):

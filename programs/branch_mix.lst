@@ -1,0 +1,16 @@
+# listing for programs/branch_mix.s
+# 9 instructions, 0 data words
+#   pc    encoding   source
+     0  00a00093   addi x1, x0, 10
+     4  00000113   addi x2, x0, 0
+     8  00000193   addi x3, x0, 0
+    12  00700213   addi x4, x0, 7
+    16  00110113   addi x2, x2, 1
+    20  00020663   beq  x4, x0, never
+    24  fff08093   addi x1, x1, -1
+    28  fe009ae3   bne  x1, x0, loop
+    32  00202023   sw   x2, 0(x0)
+
+# labels
+#   loop         = 16
+#   never        = 32

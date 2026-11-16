@@ -1,0 +1,17 @@
+CORE single 78
+CORE stall 68
+CORE fwd 77
+CORE pred 79
+MOD alu 67
+MOD branch_cmp 10
+MOD control_unit 7
+MOD imm_gen 6
+MOD forwarding_unit 6
+MOD hazard_unit 8
+MOD branch_predictor 12
+MOD pc_if 30
+MOD pc_if_pred 56
+MOD decode_stage 12
+MOD ex_stage 70
+MOD mem_stage 2
+MOD wb_stage 1

@@ -1,0 +1,71 @@
+loaded 9 instruction words from programs/branch_mix.imem.hex
+VCD info: dumpfile results/branch_mix.pred.vcd opened for output.
+
+Pipeline occupancy trace: branch_mix [pred]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | addi      | addi      |   --      |   --      | 
+  4 |    12 | addi      | addi      | addi      |   --      | 
+  5 |    16 | addi      | addi      | addi      | addi      | 
+  6 |    20 | addi      | addi      | addi      | addi      | 
+  7 |    24 | beq       | addi      | addi      | addi      | 
+  8 |    28 | addi      | beq       | addi      | addi      | 
+  9 |    32 | bne       | addi      | beq       | addi      | 
+ 10 |    36 | sw        | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 11 |    16 |   --      |   --      | bne       | addi      | 
+ 12 |    20 | addi      |   --      |   --      | bne       | 
+ 13 |    24 | beq       | addi      |   --      |   --      | 
+ 14 |    28 | addi      | beq       | addi      |   --      | 
+ 15 |    16 | bne       | addi      | beq       | addi      | 
+ 16 |    20 | addi      | bne       | addi      | beq       | 
+ 17 |    24 | beq       | addi      | bne       | addi      | 
+ 18 |    28 | addi      | beq       | addi      | bne       | 
+ 19 |    16 | bne       | addi      | beq       | addi      | 
+ 20 |    20 | addi      | bne       | addi      | beq       | 
+ 21 |    24 | beq       | addi      | bne       | addi      | 
+ 22 |    28 | addi      | beq       | addi      | bne       | 
+ 23 |    16 | bne       | addi      | beq       | addi      | 
+ 24 |    20 | addi      | bne       | addi      | beq       | 
+ 25 |    24 | beq       | addi      | bne       | addi      | 
+ 26 |    28 | addi      | beq       | addi      | bne       | 
+ 27 |    16 | bne       | addi      | beq       | addi      | 
+ 28 |    20 | addi      | bne       | addi      | beq       | 
+ 29 |    24 | beq       | addi      | bne       | addi      | 
+ 30 |    28 | addi      | beq       | addi      | bne       | 
+ 31 |    16 | bne       | addi      | beq       | addi      | 
+ 32 |    20 | addi      | bne       | addi      | beq       | 
+ 33 |    24 | beq       | addi      | bne       | addi      | 
+ 34 |    28 | addi      | beq       | addi      | bne       | 
+ 35 |    16 | bne       | addi      | beq       | addi      | 
+ 36 |    20 | addi      | bne       | addi      | beq       | 
+ 37 |    24 | beq       | addi      | bne       | addi      | 
+ 38 |    28 | addi      | beq       | addi      | bne       | 
+ 39 |    16 | bne       | addi      | beq       | addi      | 
+ 40 |    20 | addi      | bne       | addi      | beq       | 
+ 41 |    24 | beq       | addi      | bne       | addi      | 
+ 42 |    28 | addi      | beq       | addi      | bne       | 
+ 43 |    16 | bne       | addi      | beq       | addi      | 
+ 44 |    20 | addi      | bne       | addi      | beq       | 
+ 45 |    24 | beq       | addi      | bne       | addi      | 
+ 46 |    28 | addi      | beq       | addi      | bne       | 
+ 47 |    16 | bne       | addi      | beq       | addi      | 
+ 48 |    20 | addi      | bne       | addi      | beq       | MISPREDICT -> flush IF/ID and ID/EX
+ 49 |    32 |   --      |   --      | bne       | addi      | 
+ 50 |    36 | sw        |   --      |   --      | bne       | 
+ 51 |    36 |   --      | sw        |   --      |   --      | 
+ 52 |    36 |   --      |   --      | sw        |   --      | 
+ 53 |    36 |   --      |   --      |   --      | sw        | 
+
+---- branch_mix / pred ----
+  instructions retired : 45
+  clock cycles         : 53
+  stall cycles         : 0
+  branches resolved    : 20  (9 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 90.000000 %
+  CPI                  : 1.177778
+  IPC                  : 0.849057
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 555000 (1ps)

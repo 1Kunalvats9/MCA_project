@@ -1,0 +1,38 @@
+loaded 16 instruction words from programs/dep_chain.imem.hex
+VCD info: dumpfile results/dep_chain.fwd.vcd opened for output.
+
+Pipeline occupancy trace: dep_chain [fwd]
+cyc | IF pc | ID        | EX        | MEM       | WB        | event
+----+-------+-----------+-----------+-----------+-----------+--------------------
+  1 |     0 |   --      |   --      |   --      |   --      | 
+  2 |     4 | addi      |   --      |   --      |   --      | 
+  3 |     8 | add       | addi      |   --      |   --      | 
+  4 |    12 | add       | add       | addi      |   --      | 
+  5 |    16 | add       | add       | add       | addi      | 
+  6 |    20 | add       | add       | add       | add       | 
+  7 |    24 | add       | add       | add       | add       | 
+  8 |    28 | add       | add       | add       | add       | 
+  9 |    32 | add       | add       | add       | add       | 
+ 10 |    36 | add       | add       | add       | add       | 
+ 11 |    40 | add       | add       | add       | add       | 
+ 12 |    44 | add       | add       | add       | add       | 
+ 13 |    48 | add       | add       | add       | add       | 
+ 14 |    52 | add       | add       | add       | add       | 
+ 15 |    56 | add       | add       | add       | add       | 
+ 16 |    60 | add       | add       | add       | add       | 
+ 17 |    64 | add       | add       | add       | add       | 
+ 18 |    64 |   --      | add       | add       | add       | 
+ 19 |    64 |   --      |   --      | add       | add       | 
+ 20 |    64 |   --      |   --      |   --      | add       | 
+
+---- dep_chain / fwd ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 225000 (1ps)

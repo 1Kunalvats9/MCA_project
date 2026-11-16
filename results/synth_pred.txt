@@ -1,0 +1,44 @@
+### Yosys synthesis: pred (top = riscv_pipeline)
+
+=== riscv_pipeline ===
+     6003 wires
+      389 public wires
+     7634 cells
+      138   $_ANDNOT_
+     1236   $_AND_
+        1   $_DFF_P_
+     1442   $_MUX_
+     1375   $_NAND_
+      159   $_NOR_
+       21   $_NOT_
+      575   $_ORNOT_
+      758   $_OR_
+     1088   $_SDFFCE_PN0P_
+       64   $_SDFFCE_PN1P_
+       66   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      354   $_SDFF_PP0_
+      194   $_XNOR_
+      111   $_XOR_
+        1   dmem
+        1   imem
+=== riscv_pipeline ===
+     5695 wires
+      389 public wires
+     7287 cells
+     1239   $_AND_
+        1   $_DFF_P_
+     1638   $_MUX_
+     1557   $_NAND_
+       74   $_NOR_
+       80   $_NOT_
+      779   $_OR_
+     1088   $_SDFFCE_PN0P_
+       64   $_SDFFCE_PN1P_
+       66   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      354   $_SDFF_PP0_
+      139   $_XNOR_
+      156   $_XOR_
+
+Longest topological path in riscv_pipeline (length=79):

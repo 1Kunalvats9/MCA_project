@@ -1,0 +1,14 @@
+# listing for programs/vecsum64.s
+# 8 instructions, 64 data words
+#   pc    encoding   source
+     0  00000093   addi x1, x0, 0
+     4  00000113   addi x2, x0, 0
+     8  10000193   addi x3, x0, 256
+    12  0000a203   lw   x4, 0(x1)
+    16  00410133   add  x2, x2, x4
+    20  00408093   addi x1, x1, 4
+    24  fe309ae3   bne  x1, x3, loop
+    28  10202023   sw   x2, 256(x0)
+
+# labels
+#   loop         = 12

@@ -1,0 +1,44 @@
+### Yosys synthesis: stall (top = riscv_pipeline)
+
+=== riscv_pipeline ===
+     4834 wires
+      305 public wires
+     6401 cells
+      147   $_ANDNOT_
+      922   $_AND_
+        1   $_DFF_P_
+     1270   $_MUX_
+      936   $_NAND_
+      168   $_NOR_
+       17   $_NOT_
+      556   $_ORNOT_
+      655   $_OR_
+     1024   $_SDFFCE_PN0P_
+       65   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      347   $_SDFF_PP0_
+      106   $_XNOR_
+      136   $_XOR_
+        1   dmem
+        1   imem
+=== riscv_pipeline ===
+     4397 wires
+      305 public wires
+     5928 cells
+      842   $_AND_
+        1   $_DFF_P_
+     1519   $_MUX_
+     1063   $_NAND_
+       88   $_NOR_
+       59   $_NOT_
+      628   $_OR_
+     1024   $_SDFFCE_PN0P_
+       65   $_SDFFE_PP0N_
+       32   $_SDFFE_PP0P_
+      347   $_SDFF_PP0_
+       48   $_XNOR_
+      193   $_XOR_
+        1   dmem
+        1   imem
+
+Longest topological path in riscv_pipeline (length=68):

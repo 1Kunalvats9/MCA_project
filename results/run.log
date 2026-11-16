@@ -1,0 +1,652 @@
+------------------------------------------------------------
+STEP 1 - assembling programs
+------------------------------------------------------------
+programs/independent.s: 16 instructions, 0 data words
+  -> programs/independent.imem.hex
+  -> programs/independent.dmem.hex
+  -> programs/independent.lst
+  ok   independent.s
+programs/dep_chain.s: 16 instructions, 0 data words
+  -> programs/dep_chain.imem.hex
+  -> programs/dep_chain.dmem.hex
+  -> programs/dep_chain.lst
+  ok   dep_chain.s
+programs/load_use.s: 13 instructions, 4 data words
+  -> programs/load_use.imem.hex
+  -> programs/load_use.dmem.hex
+  -> programs/load_use.lst
+  ok   load_use.s
+programs/array_sum.s: 8 instructions, 16 data words
+  -> programs/array_sum.imem.hex
+  -> programs/array_sum.dmem.hex
+  -> programs/array_sum.lst
+  ok   array_sum.s
+programs/branch_mix.s: 9 instructions, 0 data words
+  -> programs/branch_mix.imem.hex
+  -> programs/branch_mix.dmem.hex
+  -> programs/branch_mix.lst
+  ok   branch_mix.s
+programs/fib.s: 10 instructions, 0 data words
+  -> programs/fib.imem.hex
+  -> programs/fib.dmem.hex
+  -> programs/fib.lst
+  ok   fib.s
+programs/vecsum64.s: 8 instructions, 64 data words
+  -> programs/vecsum64.imem.hex
+  -> programs/vecsum64.dmem.hex
+  -> programs/vecsum64.lst
+  ok   vecsum64.s
+programs/hazard_suite.s: 39 instructions, 0 data words
+  -> programs/hazard_suite.imem.hex
+  -> programs/hazard_suite.dmem.hex
+  -> programs/hazard_suite.lst
+  ok   hazard_suite.s
+------------------------------------------------------------
+STEP 2 - compiling
+------------------------------------------------------------
+  ok   tb_core [single]
+  ok   tb_hazards [single]
+rtl/pipelined/forwarding_unit.v:57: warning: @* found no sensitivities so it will never trigger.
+  ok   tb_core [stall]
+rtl/pipelined/forwarding_unit.v:57: warning: @* found no sensitivities so it will never trigger.
+  ok   tb_hazards [stall]
+  ok   tb_core [fwd]
+  ok   tb_hazards [fwd]
+  ok   tb_core [pred]
+  ok   tb_hazards [pred]
+  ok   tb_alu
+  ok   tb_regfile
+------------------------------------------------------------
+STEP 3 - unit tests
+------------------------------------------------------------
+== tb_alu ==
+  pass add 7+5
+  pass add 0+0
+  pass sub 7-5
+  pass sub 5-7 negative
+  pass sub equal -> 0
+  pass zero flag
+  pass add overflow wraps
+  pass add with negative operand
+== tb_alu PASSED ==
+tb/tb_alu.v:59: $finish called at 8000 (1ps)
+  PASS tb_alu
+== tb_regfile ==
+  pass write then read x5
+  pass write to x0 discarded
+  pass same-cycle WB->ID bypass
+  pass value committed after the edge
+  pass no bypass when we=0
+  pass no bypass for x0 write
+== tb_regfile PASSED ==
+tb/tb_regfile.v:82: $finish called at 91000 (1ps)
+  PASS tb_regfile
+------------------------------------------------------------
+STEP 4 - directed hazard test
+------------------------------------------------------------
+
+== tb_hazards / single ==  (34 instructions in 34 cycles)
+== tb_hazards single PASSED (34 checks) ==
+tb/tb_hazards.v:223: $finish called at 365000 (1ps)
+  PASS hazard_suite [single]  (34 instructions in 34 cycles)
+
+== tb_hazards / stall ==  (34 instructions in 63 cycles)
+== tb_hazards stall PASSED (34 checks) ==
+tb/tb_hazards.v:223: $finish called at 655000 (1ps)
+  PASS hazard_suite [stall]  (34 instructions in 63 cycles)
+
+== tb_hazards / fwd ==  (34 instructions in 45 cycles)
+== tb_hazards fwd PASSED (34 checks) ==
+tb/tb_hazards.v:223: $finish called at 475000 (1ps)
+  PASS hazard_suite [fwd]  (34 instructions in 45 cycles)
+
+== tb_hazards / pred ==  (34 instructions in 45 cycles)
+== tb_hazards pred PASSED (34 checks) ==
+tb/tb_hazards.v:223: $finish called at 475000 (1ps)
+  PASS hazard_suite [pred]  (34 instructions in 45 cycles)
+------------------------------------------------------------
+STEP 5 - benchmarks
+------------------------------------------------------------
+loaded 16 instruction words from programs/independent.imem.hex
+
+---- independent / single ----
+  instructions retired : 16
+  clock cycles         : 16
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 1 2 3 4 5 6 7 8
+tb/tb_core.v:215: $finish called at 185000 (1ps)
+  ran  independent [single]
+loaded 16 instruction words from programs/independent.imem.hex
+
+---- independent / stall ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 3 4 5 6 7 8
+tb/tb_core.v:215: $finish called at 225000 (1ps)
+  ran  independent [stall]
+loaded 16 instruction words from programs/independent.imem.hex
+
+---- independent / fwd ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 3 4 5 6 7 8
+tb/tb_core.v:215: $finish called at 225000 (1ps)
+  ran  independent [fwd]
+loaded 16 instruction words from programs/independent.imem.hex
+
+---- independent / pred ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 3 4 5 6 7 8
+tb/tb_core.v:215: $finish called at 225000 (1ps)
+  ran  independent [pred]
+loaded 16 instruction words from programs/dep_chain.imem.hex
+
+---- dep_chain / single ----
+  instructions retired : 16
+  clock cycles         : 16
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 185000 (1ps)
+  ran  dep_chain [single]
+loaded 16 instruction words from programs/dep_chain.imem.hex
+
+---- dep_chain / stall ----
+  instructions retired : 16
+  clock cycles         : 50
+  stall cycles         : 30
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 3.125000
+  IPC                  : 0.320000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 525000 (1ps)
+  ran  dep_chain [stall]
+loaded 16 instruction words from programs/dep_chain.imem.hex
+
+---- dep_chain / fwd ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 225000 (1ps)
+  ran  dep_chain [fwd]
+loaded 16 instruction words from programs/dep_chain.imem.hex
+
+---- dep_chain / pred ----
+  instructions retired : 16
+  clock cycles         : 20
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.250000
+  IPC                  : 0.800000
+  final x1..x8         : 1 2 4 8 16 32 64 128
+tb/tb_core.v:215: $finish called at 225000 (1ps)
+  ran  dep_chain [pred]
+loaded 13 instruction words from programs/load_use.imem.hex
+loaded 4 data words from programs/load_use.dmem.hex
+
+---- load_use / single ----
+  instructions retired : 13
+  clock cycles         : 13
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 10 20 20 40 30 60 40 80
+tb/tb_core.v:215: $finish called at 155000 (1ps)
+  ran  load_use [single]
+loaded 13 instruction words from programs/load_use.imem.hex
+loaded 4 data words from programs/load_use.dmem.hex
+
+---- load_use / stall ----
+  instructions retired : 13
+  clock cycles         : 27
+  stall cycles         : 10
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 2.076923
+  IPC                  : 0.481481
+  final x1..x8         : 10 20 20 40 30 60 40 80
+tb/tb_core.v:215: $finish called at 295000 (1ps)
+  ran  load_use [stall]
+loaded 13 instruction words from programs/load_use.imem.hex
+loaded 4 data words from programs/load_use.dmem.hex
+
+---- load_use / fwd ----
+  instructions retired : 13
+  clock cycles         : 21
+  stall cycles         : 4
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.615385
+  IPC                  : 0.619048
+  final x1..x8         : 10 20 20 40 30 60 40 80
+tb/tb_core.v:215: $finish called at 235000 (1ps)
+  ran  load_use [fwd]
+loaded 13 instruction words from programs/load_use.imem.hex
+loaded 4 data words from programs/load_use.dmem.hex
+
+---- load_use / pred ----
+  instructions retired : 13
+  clock cycles         : 21
+  stall cycles         : 4
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.615385
+  IPC                  : 0.619048
+  final x1..x8         : 10 20 20 40 30 60 40 80
+tb/tb_core.v:215: $finish called at 235000 (1ps)
+  ran  load_use [pred]
+loaded 8 instruction words from programs/array_sum.imem.hex
+loaded 16 data words from programs/array_sum.dmem.hex
+
+---- array_sum / single ----
+  instructions retired : 68
+  clock cycles         : 68
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 64 136 64 16 0 0 0 0
+tb/tb_core.v:215: $finish called at 705000 (1ps)
+  ran  array_sum [single]
+loaded 8 instruction words from programs/array_sum.imem.hex
+loaded 16 data words from programs/array_sum.dmem.hex
+
+---- array_sum / stall ----
+  instructions retired : 68
+  clock cycles         : 166
+  stall cycles         : 64
+  branches resolved    : 16  (15 taken)
+  mispredictions       : 15  (30 flushed slots)
+  prediction accuracy  : 6.250000 %
+  CPI                  : 2.441176
+  IPC                  : 0.409639
+  final x1..x8         : 64 136 64 16 0 0 0 0
+tb/tb_core.v:215: $finish called at 1685000 (1ps)
+  ran  array_sum [stall]
+loaded 8 instruction words from programs/array_sum.imem.hex
+loaded 16 data words from programs/array_sum.dmem.hex
+
+---- array_sum / fwd ----
+  instructions retired : 68
+  clock cycles         : 118
+  stall cycles         : 16
+  branches resolved    : 16  (15 taken)
+  mispredictions       : 15  (30 flushed slots)
+  prediction accuracy  : 6.250000 %
+  CPI                  : 1.735294
+  IPC                  : 0.576271
+  final x1..x8         : 64 136 64 16 0 0 0 0
+tb/tb_core.v:215: $finish called at 1205000 (1ps)
+  ran  array_sum [fwd]
+loaded 8 instruction words from programs/array_sum.imem.hex
+loaded 16 data words from programs/array_sum.dmem.hex
+
+---- array_sum / pred ----
+  instructions retired : 68
+  clock cycles         : 92
+  stall cycles         : 16
+  branches resolved    : 16  (15 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 87.500000 %
+  CPI                  : 1.352941
+  IPC                  : 0.739130
+  final x1..x8         : 64 136 64 16 0 0 0 0
+tb/tb_core.v:215: $finish called at 945000 (1ps)
+  ran  array_sum [pred]
+loaded 9 instruction words from programs/branch_mix.imem.hex
+
+---- branch_mix / single ----
+  instructions retired : 45
+  clock cycles         : 45
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 475000 (1ps)
+  ran  branch_mix [single]
+loaded 9 instruction words from programs/branch_mix.imem.hex
+
+---- branch_mix / stall ----
+  instructions retired : 45
+  clock cycles         : 88
+  stall cycles         : 21
+  branches resolved    : 20  (9 taken)
+  mispredictions       : 9  (18 flushed slots)
+  prediction accuracy  : 55.000000 %
+  CPI                  : 1.955556
+  IPC                  : 0.511364
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 905000 (1ps)
+  ran  branch_mix [stall]
+loaded 9 instruction words from programs/branch_mix.imem.hex
+
+---- branch_mix / fwd ----
+  instructions retired : 45
+  clock cycles         : 67
+  stall cycles         : 0
+  branches resolved    : 20  (9 taken)
+  mispredictions       : 9  (18 flushed slots)
+  prediction accuracy  : 55.000000 %
+  CPI                  : 1.488889
+  IPC                  : 0.671642
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 695000 (1ps)
+  ran  branch_mix [fwd]
+loaded 9 instruction words from programs/branch_mix.imem.hex
+
+---- branch_mix / pred ----
+  instructions retired : 45
+  clock cycles         : 53
+  stall cycles         : 0
+  branches resolved    : 20  (9 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 90.000000 %
+  CPI                  : 1.177778
+  IPC                  : 0.849057
+  final x1..x8         : 0 10 0 7 0 0 0 0
+tb/tb_core.v:215: $finish called at 555000 (1ps)
+  ran  branch_mix [pred]
+loaded 10 instruction words from programs/fib.imem.hex
+
+---- fib / single ----
+  instructions retired : 105
+  clock cycles         : 105
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 6765 10946 20 20 10946 0 0 0
+tb/tb_core.v:215: $finish called at 1075000 (1ps)
+  ran  fib [single]
+loaded 10 instruction words from programs/fib.imem.hex
+
+---- fib / stall ----
+  instructions retired : 105
+  clock cycles         : 207
+  stall cycles         : 60
+  branches resolved    : 20  (19 taken)
+  mispredictions       : 19  (38 flushed slots)
+  prediction accuracy  : 5.000000 %
+  CPI                  : 1.971429
+  IPC                  : 0.507246
+  final x1..x8         : 6765 10946 20 20 10946 0 0 0
+tb/tb_core.v:215: $finish called at 2095000 (1ps)
+  ran  fib [stall]
+loaded 10 instruction words from programs/fib.imem.hex
+
+---- fib / fwd ----
+  instructions retired : 105
+  clock cycles         : 147
+  stall cycles         : 0
+  branches resolved    : 20  (19 taken)
+  mispredictions       : 19  (38 flushed slots)
+  prediction accuracy  : 5.000000 %
+  CPI                  : 1.400000
+  IPC                  : 0.714286
+  final x1..x8         : 6765 10946 20 20 10946 0 0 0
+tb/tb_core.v:215: $finish called at 1495000 (1ps)
+  ran  fib [fwd]
+loaded 10 instruction words from programs/fib.imem.hex
+
+---- fib / pred ----
+  instructions retired : 105
+  clock cycles         : 113
+  stall cycles         : 0
+  branches resolved    : 20  (19 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 90.000000 %
+  CPI                  : 1.076190
+  IPC                  : 0.929204
+  final x1..x8         : 6765 10946 20 20 10946 0 0 0
+tb/tb_core.v:215: $finish called at 1155000 (1ps)
+  ran  fib [pred]
+loaded 8 instruction words from programs/vecsum64.imem.hex
+loaded 64 data words from programs/vecsum64.dmem.hex
+
+---- vecsum64 / single ----
+  instructions retired : 260
+  clock cycles         : 260
+  stall cycles         : 0
+  branches resolved    : 0  (0 taken)
+  mispredictions       : 0  (0 flushed slots)
+  prediction accuracy  : 100.000000 %
+  CPI                  : 1.000000
+  IPC                  : 1.000000
+  final x1..x8         : 256 2080 256 64 0 0 0 0
+tb/tb_core.v:215: $finish called at 2625000 (1ps)
+  ran  vecsum64 [single]
+loaded 8 instruction words from programs/vecsum64.imem.hex
+loaded 64 data words from programs/vecsum64.dmem.hex
+
+---- vecsum64 / stall ----
+  instructions retired : 260
+  clock cycles         : 646
+  stall cycles         : 256
+  branches resolved    : 64  (63 taken)
+  mispredictions       : 63  (126 flushed slots)
+  prediction accuracy  : 1.562500 %
+  CPI                  : 2.484615
+  IPC                  : 0.402477
+  final x1..x8         : 256 2080 256 64 0 0 0 0
+tb/tb_core.v:215: $finish called at 6485000 (1ps)
+  ran  vecsum64 [stall]
+loaded 8 instruction words from programs/vecsum64.imem.hex
+loaded 64 data words from programs/vecsum64.dmem.hex
+
+---- vecsum64 / fwd ----
+  instructions retired : 260
+  clock cycles         : 454
+  stall cycles         : 64
+  branches resolved    : 64  (63 taken)
+  mispredictions       : 63  (126 flushed slots)
+  prediction accuracy  : 1.562500 %
+  CPI                  : 1.746154
+  IPC                  : 0.572687
+  final x1..x8         : 256 2080 256 64 0 0 0 0
+tb/tb_core.v:215: $finish called at 4565000 (1ps)
+  ran  vecsum64 [fwd]
+loaded 8 instruction words from programs/vecsum64.imem.hex
+loaded 64 data words from programs/vecsum64.dmem.hex
+
+---- vecsum64 / pred ----
+  instructions retired : 260
+  clock cycles         : 332
+  stall cycles         : 64
+  branches resolved    : 64  (63 taken)
+  mispredictions       : 2  (4 flushed slots)
+  prediction accuracy  : 96.875000 %
+  CPI                  : 1.276923
+  IPC                  : 0.783133
+  final x1..x8         : 256 2080 256 64 0 0 0 0
+tb/tb_core.v:215: $finish called at 3345000 (1ps)
+  ran  vecsum64 [pred]
+------------------------------------------------------------
+STEP 6 - golden model check (pipelined vs single-cycle)
+------------------------------------------------------------
+  MATCH independent: stall == single-cycle
+  MATCH independent: fwd == single-cycle
+  MATCH independent: pred == single-cycle
+  MATCH dep_chain: stall == single-cycle
+  MATCH dep_chain: fwd == single-cycle
+  MATCH dep_chain: pred == single-cycle
+  MATCH load_use: stall == single-cycle
+  MATCH load_use: fwd == single-cycle
+  MATCH load_use: pred == single-cycle
+  MATCH array_sum: stall == single-cycle
+  MATCH array_sum: fwd == single-cycle
+  MATCH array_sum: pred == single-cycle
+  MATCH branch_mix: stall == single-cycle
+  MATCH branch_mix: fwd == single-cycle
+  MATCH branch_mix: pred == single-cycle
+  MATCH fib: stall == single-cycle
+  MATCH fib: fwd == single-cycle
+  MATCH fib: pred == single-cycle
+  MATCH vecsum64: stall == single-cycle
+  MATCH vecsum64: fwd == single-cycle
+  MATCH vecsum64: pred == single-cycle
+------------------------------------------------------------
+STEP 7 - performance summary
+------------------------------------------------------------
+## CPI by benchmark and configuration
+
+| Benchmark | Instrs | Single-cycle | Stall only | Forwarding | Fwd + predictor | Forwarding gain | Predictor gain |
+|---|---|---|---|---|---|---|---|
+| independent | 16 | 1.000 | 1.250 | 1.250 | 1.250 | 1.00x | 1.00x |
+| dep_chain | 16 | 1.000 | 3.125 | 1.250 | 1.250 | 2.50x | 1.00x |
+| load_use | 13 | 1.000 | 2.077 | 1.615 | 1.615 | 1.29x | 1.00x |
+| array_sum | 68 | 1.000 | 2.441 | 1.735 | 1.353 | 1.41x | 1.28x |
+| branch_mix | 45 | 1.000 | 1.956 | 1.489 | 1.178 | 1.31x | 1.26x |
+| fib | 105 | 1.000 | 1.971 | 1.400 | 1.076 | 1.41x | 1.30x |
+| vecsum64 | 260 | 1.000 | 2.485 | 1.746 | 1.277 | 1.42x | 1.37x |
+
+## Cycle counts
+
+| Benchmark | Instrs | Single-cycle | Stall only | Forwarding | Fwd + predictor |
+|---|---|---|---|---|---|
+| independent | 16 | 16 | 20 | 20 | 20 |
+| dep_chain | 16 | 16 | 50 | 20 | 20 |
+| load_use | 13 | 13 | 27 | 21 | 21 |
+| array_sum | 68 | 68 | 166 | 118 | 92 |
+| branch_mix | 45 | 45 | 88 | 67 | 53 |
+| fib | 105 | 105 | 207 | 147 | 113 |
+| vecsum64 | 260 | 260 | 646 | 454 | 332 |
+
+## Where the cycles go (pipelined configurations)
+
+| Benchmark | Config | Instrs | Cycles | Pipeline fill | Stall cycles | Mispredicts | Flushed slots | Accounted |
+|---|---|---|---|---|---|---|---|---|
+| independent | Stall only | 16 | 20 | 4 | 0 | 0 | 0 | yes |
+| independent | Forwarding | 16 | 20 | 4 | 0 | 0 | 0 | yes |
+| independent | Fwd + predictor | 16 | 20 | 4 | 0 | 0 | 0 | yes |
+| dep_chain | Stall only | 16 | 50 | 4 | 30 | 0 | 0 | yes |
+| dep_chain | Forwarding | 16 | 20 | 4 | 0 | 0 | 0 | yes |
+| dep_chain | Fwd + predictor | 16 | 20 | 4 | 0 | 0 | 0 | yes |
+| load_use | Stall only | 13 | 27 | 4 | 10 | 0 | 0 | yes |
+| load_use | Forwarding | 13 | 21 | 4 | 4 | 0 | 0 | yes |
+| load_use | Fwd + predictor | 13 | 21 | 4 | 4 | 0 | 0 | yes |
+| array_sum | Stall only | 68 | 166 | 4 | 64 | 15 | 30 | yes |
+| array_sum | Forwarding | 68 | 118 | 4 | 16 | 15 | 30 | yes |
+| array_sum | Fwd + predictor | 68 | 92 | 4 | 16 | 2 | 4 | yes |
+| branch_mix | Stall only | 45 | 88 | 4 | 21 | 9 | 18 | yes |
+| branch_mix | Forwarding | 45 | 67 | 4 | 0 | 9 | 18 | yes |
+| branch_mix | Fwd + predictor | 45 | 53 | 4 | 0 | 2 | 4 | yes |
+| fib | Stall only | 105 | 207 | 4 | 60 | 19 | 38 | yes |
+| fib | Forwarding | 105 | 147 | 4 | 0 | 19 | 38 | yes |
+| fib | Fwd + predictor | 105 | 113 | 4 | 0 | 2 | 4 | yes |
+| vecsum64 | Stall only | 260 | 646 | 4 | 256 | 63 | 126 | yes |
+| vecsum64 | Forwarding | 260 | 454 | 4 | 64 | 63 | 126 | yes |
+| vecsum64 | Fwd + predictor | 260 | 332 | 4 | 64 | 2 | 4 | yes |
+
+## IPC by benchmark and configuration
+
+| Benchmark | Single-cycle | Stall only | Forwarding | Fwd + predictor |
+|---|---|---|---|---|
+| independent | 1.000 | 0.800 | 0.800 | 0.800 |
+| dep_chain | 1.000 | 0.320 | 0.800 | 0.800 |
+| load_use | 1.000 | 0.481 | 0.619 | 0.619 |
+| array_sum | 1.000 | 0.410 | 0.576 | 0.739 |
+| branch_mix | 1.000 | 0.511 | 0.672 | 0.849 |
+| fib | 1.000 | 0.507 | 0.714 | 0.929 |
+| vecsum64 | 1.000 | 0.402 | 0.573 | 0.783 |
+
+## Aggregate over all benchmarks
+
+| Configuration | Total instrs | Total cycles | Overall CPI | Overall IPC | Cycles saved vs previous |
+|---|---|---|---|---|---|
+| Single-cycle | 523 | 523 | 1.000 | 1.000 | - |
+| Pipelined (stall only) | 523 | 1204 | 2.302 | 0.434 | -681 (0.43x) |
+| Pipelined (forwarding) | 523 | 847 | 1.620 | 0.617 | 357 (1.42x) |
+| Pipelined (fwd + 2-bit predictor) | 523 | 651 | 1.245 | 0.803 | 196 (1.30x) |
+
+## Branch prediction accuracy
+
+Static not-taken (the `fwd` configuration) mispredicts exactly the taken branches. The 2-bit branch history table (`pred`) learns each branch's behaviour.
+
+| Benchmark | Branches | Taken | Static NT mispredicts | Static NT accuracy | 2-bit BHT mispredicts | 2-bit BHT accuracy |
+|---|---|---|---|---|---|---|
+| array_sum | 16 | 15 | 15 | 6.2% | 2 | 87.5% |
+| branch_mix | 20 | 9 | 9 | 55.0% | 2 | 90.0% |
+| fib | 20 | 19 | 19 | 5.0% | 2 | 90.0% |
+| vecsum64 | 64 | 63 | 63 | 1.6% | 2 | 96.9% |
+| **total** | **120** | **106** | **106** | **11.7%** | **8** | **93.3%** |
+
+The predictor removes **98 of 106** mispredictions, worth **196 cycles** of flushed work.
+
+### Note on honest speedup
+
+Cycle count alone overstates the benefit of pipelining, because the single-cycle core needs a much longer clock period. The fair comparison is
+
+    speedup = (T_single x cycles_single) / (T_pipe x cycles_pipe)
+
+with T taken from the synthesis timing report (see results/synth_*.txt).
+
+------------------------------------------------------------
+STEP 8 - pipeline traces and waveforms for the report
+------------------------------------------------------------
+  wrote results/trace_dep_chain_stall.txt and results/dep_chain.stall.vcd
+  wrote results/trace_dep_chain_fwd.txt and results/dep_chain.fwd.vcd
+  wrote results/trace_load_use_fwd.txt and results/load_use.fwd.vcd
+  wrote results/trace_array_sum_fwd.txt and results/array_sum.fwd.vcd
+  wrote results/trace_array_sum_pred.txt and results/array_sum.pred.vcd
+  wrote results/trace_branch_mix_fwd.txt and results/branch_mix.fwd.vcd
+  wrote results/trace_branch_mix_pred.txt and results/branch_mix.pred.vcd
+  wrote results/trace_independent_fwd.txt and results/independent.fwd.vcd
+------------------------------------------------------------
+ALL CHECKS PASSED
+  results/perf.csv    - raw numbers
+  results/perf.md     - comparison table for the report
+  results/perf.md     - comparison tables for the report
+  results/trace_*.txt - pipeline occupancy traces (report figures)
+  results/*.vcd       - waveforms for GTKWave
+  results/run.log     - full log

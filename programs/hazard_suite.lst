@@ -1,0 +1,48 @@
+# listing for programs/hazard_suite.s
+# 39 instructions, 0 data words
+#   pc    encoding   source
+     0  00a00093   addi x1,  x0, 10
+     4  00300113   addi x2,  x0, 3
+     8  002081b3   add  x3,  x1, x2
+    12  40208233   sub  x4,  x1, x2
+    16  004182b3   add  x5,  x3, x4
+    20  06400313   addi x6,  x0, 100
+    24  00100393   addi x7,  x0, 1
+    28  00630433   add  x8,  x6, x6
+    32  00100493   addi x9,  x0, 1
+    36  00200493   addi x9,  x0, 2
+    40  00048533   add  x10, x9, x0
+    44  00208033   add  x0,  x1, x2
+    48  00100633   add  x12, x0, x1
+    52  04000693   addi x13, x0, 64
+    56  01400713   addi x14, x0, 20
+    60  00e6a023   sw   x14, 0(x13)
+    64  0006a783   lw   x15, 0(x13)
+    68  00f78833   add  x16, x15, x15
+    72  001088b3   add  x17, x1, x1
+    76  0116a223   sw   x17, 4(x13)
+    80  0046a903   lw   x18, 4(x13)
+    84  00500993   addi x19, x0, 5
+    88  00500a13   addi x20, x0, 5
+    92  01499463   bne  x19, x20, skip1
+    96  00100a93   addi x21, x0, 1
+   100  01498663   beq  x19, x20, skip2
+   104  06300b13   addi x22, x0, 99
+   108  06300b93   addi x23, x0, 99
+   112  00700c13   addi x24, x0, 7
+   116  00400c93   addi x25, x0, 4
+   120  000c8d33   add  x26, x25, x0
+   124  019d0463   beq  x26, x25, skip3
+   128  06300d93   addi x27, x0, 99
+   132  00100e13   addi x28, x0, 1
+   136  07b00e93   addi x29, x0, 123
+   140  01498663   beq  x19, x20, skip4
+   144  01d6a823   sw   x29, 16(x13)
+   148  06300f13   addi x30, x0, 99
+   152  02a00f93   addi x31, x0, 42
+
+# labels
+#   skip1        = 100
+#   skip2        = 112
+#   skip3        = 132
+#   skip4        = 152

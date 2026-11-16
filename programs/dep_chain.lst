@@ -1,0 +1,19 @@
+# listing for programs/dep_chain.s
+# 16 instructions, 0 data words
+#   pc    encoding   source
+     0  00100093   addi x1,  x0, 1
+     4  00108133   add  x2,  x1,  x1
+     8  002101b3   add  x3,  x2,  x2
+    12  00318233   add  x4,  x3,  x3
+    16  004202b3   add  x5,  x4,  x4
+    20  00528333   add  x6,  x5,  x5
+    24  006303b3   add  x7,  x6,  x6
+    28  00738433   add  x8,  x7,  x7
+    32  008404b3   add  x9,  x8,  x8
+    36  00948533   add  x10, x9,  x9
+    40  00a505b3   add  x11, x10, x10
+    44  00b58633   add  x12, x11, x11
+    48  00c606b3   add  x13, x12, x12
+    52  00d68733   add  x14, x13, x13
+    56  00e707b3   add  x15, x14, x14
+    60  00f78833   add  x16, x15, x15
